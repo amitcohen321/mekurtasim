@@ -16,7 +16,18 @@ const validatedEntries = new Map();
 const newsletterList = [];
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https:"],
+            scriptSrc: ["'self'"],
+            connectSrc: ["'self'"], // Allow fetch/XHR to same origin
+            imgSrc: ["'self'", "data:"],
+            fontSrc: ["'self'", "https:", "data:"]
+        }
+    }
+}));
 app.use(cors());
 app.use(express.json());
 
