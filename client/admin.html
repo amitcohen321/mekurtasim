@@ -286,15 +286,20 @@
         let currentStats = null;
         
         async function loadData() {
+            console.log('🔍 Starting loadData...');
             try {
                 // Load statistics
+                console.log('📊 Fetching /api/status...');
                 const statsResponse = await fetch('/api/status');
+                console.log('📊 Status response:', statsResponse.status);
                 const stats = await statsResponse.json();
+                console.log('📊 Stats data:', stats);
                 currentStats = stats;
                 
                 const validationRate = stats.totalGuests > 0 ? (stats.validatedCount / stats.totalGuests * 100).toFixed(1) : 0;
                 const ticketUsageRate = stats.totalTickets > 0 ? (stats.validatedTickets / stats.totalTickets * 100).toFixed(1) : 0;
                 
+                console.log('📊 Updating stats HTML...');
                 document.getElementById('stats').innerHTML = `
                     <div class="stat-card">
                         <div class="stat-number">${stats.validatedCount}</div>
@@ -323,11 +328,15 @@
                 `;
                 
                 // Load entries
+                console.log('📋 Loading entries...');
                 await loadEntries();
+                console.log('📧 Loading newsletter...');
                 await loadNewsletter();
                 
+                console.log('✅ loadData completed successfully!');
+                
             } catch (error) {
-                console.error('Error loading data:', error);
+                console.error('❌ Error in loadData:', error);
                 document.getElementById('stats').innerHTML = '<div class="loading">❌ שגיאה בטעינת נתונים</div>';
             }
         }

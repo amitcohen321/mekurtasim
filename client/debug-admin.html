@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Admin</title>
+</head>
+<body>
+    <h1>Debug Admin</h1>
+    <div id="result"></div>
+    
+    <script>
+        async function testAdmin() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Testing API calls...<br>';
+            
+            try {
+                // Test status endpoint
+                result.innerHTML += 'Testing /api/status...<br>';
+                const statusResponse = await fetch('/api/status');
+                const statusData = await statusResponse.json();
+                result.innerHTML += `Status: ${JSON.stringify(statusData)}<br>`;
+                
+                // Test validated endpoint  
+                result.innerHTML += 'Testing /api/validated...<br>';
+                const validatedResponse = await fetch('/api/validated');
+                const validatedData = await validatedResponse.json();
+                result.innerHTML += `Validated: ${JSON.stringify(validatedData)}<br>`;
+                
+                // Test newsletter endpoint
+                result.innerHTML += 'Testing /api/newsletter-list...<br>';
+                const newsletterResponse = await fetch('/api/newsletter-list');
+                const newsletterData = await newsletterResponse.json();
+                result.innerHTML += `Newsletter: ${JSON.stringify(newsletterData)}<br>`;
+                
+                result.innerHTML += '<br>All tests completed successfully!';
+                
+            } catch (error) {
+                result.innerHTML += `<br>ERROR: ${error.message}`;
+                console.error('Error:', error);
+            }
+        }
+        
+        // Run test when page loads
+        window.addEventListener('load', testAdmin);
+    </script>
+</body>
+</html> 

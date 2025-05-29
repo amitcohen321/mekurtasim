@@ -21,7 +21,7 @@ app.use(helmet({
         directives: {
             defaultSrc: ["'self'"],
             styleSrc: ["'self'", "'unsafe-inline'", "https:"],
-            scriptSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"], // Allow inline scripts
             connectSrc: ["'self'"], // Allow fetch/XHR to same origin
             imgSrc: ["'self'", "data:"],
             fontSrc: ["'self'", "https:", "data:"]
