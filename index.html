@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>מסיבת גג - שקיעה על הגג</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Scripts -->
+    <script src="guests.js" defer></script>
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <main class="hero">
+        <!-- String lights decoration -->
+        <div class="string-lights">
+            <span class="bulb"></span>
+            <span class="bulb"></span>
+            <span class="bulb"></span>
+            <span class="bulb"></span>
+            <span class="bulb"></span>
+        </div>
+        
+        <div class="overlay">
+            <h1 class="title">🌅 שקיעה על הגג</h1>
+            <p class="subtitle">נא להזין מספר טלפון</p>
+            
+            <form id="gate-form" autocomplete="off">
+                <input 
+                    id="phone-input" 
+                    type="tel" 
+                    placeholder="05xxxxxxxx" 
+                    maxlength="20" 
+                    required
+                    autocomplete="off"
+                    dir="ltr"
+                >
+                <button id="submit-btn" type="submit">
+                    <span class="btn-text">בדוק רישום</span>
+                    <span class="btn-icon">🔍</span>
+                </button>
+            </form>
+            
+            <div id="result" class="result hidden"></div>
+            
+            <button id="again-btn" class="again-btn hidden">
+                בדוק מספר נוסף
+            </button>
+        </div>
+        
+        <!-- City skyline silhouette -->
+        <div class="skyline"></div>
+    </main>
+</body>
+</html> 
