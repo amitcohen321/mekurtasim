@@ -112,7 +112,23 @@ app.get('/api/validated', (req, res) => {
         ...data
     }));
     
+    // Sort by timestamp (newest first)
+    entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
     res.json(entries);
+});
+
+// API endpoint to get newsletter signups (for admin)
+app.get('/api/newsletter-list', (req, res) => {
+    const newsletters = newsletterList.map(entry => ({
+        ...entry,
+        phone: entry.phone ? entry.phone.substring(0, 3) + '****' + entry.phone.substring(7) : 'N/A'
+    }));
+    
+    // Sort by timestamp (newest first)
+    newsletters.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    res.json(newsletters);
 });
 
 // API endpoint for newsletter signup
@@ -136,6 +152,11 @@ app.post('/api/newsletter', (req, res) => {
 // Health check
 app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Admin page route
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/admin.html'));
 });
 
 // Start server
