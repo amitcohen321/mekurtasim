@@ -79,4 +79,9 @@ const guestsByPhone = {
     '0504333372': { name: 'עדן דוד', tickets: 2 }
 };
 
+// Export for Node.js
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { guestsByPhone };
+}
+
 // סה"כ: 75 אורחים ייחודיים 

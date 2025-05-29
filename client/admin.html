@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מסיבת גג - ניהול כניסות</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #FF9C42;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #FFD700;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .entries-list {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .entry {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .entry:last-child {
+            border-bottom: none;
+        }
+        
+        .refresh-btn {
+            background: #FF9C42;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+        
+        .refresh-btn:hover {
+            background: #FF7A00;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 ניהול כניסות - מסיבת גג</h1>
+        
+        <button class="refresh-btn" onclick="loadData()">רענן נתונים</button>
+        
+        <div class="stats-grid" id="stats">
+            <div class="loading">טוען נתונים...</div>
+        </div>
+        
+        <h2 style="margin-bottom: 20px;">כניסות אחרונות</h2>
+        <div class="entries-list" id="entries">
+            <div class="loading">טוען נתונים...</div>
+        </div>
+    </div>
+    
+    <script>
+        async function loadData() {
+            try {
+                // Load statistics
+                const statsResponse = await fetch('/api/status');
+                const stats = await statsResponse.json();
+                
+                document.getElementById('stats').innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.validatedCount}</div>
+                        <div class="stat-label">אורחים שנכנסו</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.totalGuests}</div>
+                        <div class="stat-label">סה"כ אורחים</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.validatedTickets}</div>
+                        <div class="stat-label">כרטיסים שנוצלו</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.totalTickets}</div>
+                        <div class="stat-label">סה"כ כרטיסים</div>
+                    </div>
+                `;
+                
+                // Load entries
+                const entriesResponse = await fetch('/api/validated');
+                const entries = await entriesResponse.json();
+                
+                const entriesHtml = entries.length > 0 
+                    ? entries.map(entry => `
+                        <div class="entry">
+                            <div>
+                                <strong>${entry.name}</strong>
+                                <br>
+                                <small style="opacity: 0.7">${entry.phone}</small>
+                            </div>
+                            <div style="text-align: left;">
+                                <div>${entry.tickets} כרטיסים</div>
+                                <small style="opacity: 0.7">
+                                    ${new Date(entry.timestamp).toLocaleString('he-IL')}
+                                </small>
+                            </div>
+                        </div>
+                    `).join('')
+                    : '<div style="text-align: center; padding: 40px; opacity: 0.6;">אין כניסות עדיין</div>';
+                
+                document.getElementById('entries').innerHTML = entriesHtml;
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('stats').innerHTML = '<div class="loading">שגיאה בטעינת נתונים</div>';
+                document.getElementById('entries').innerHTML = '<div class="loading">שגיאה בטעינת נתונים</div>';
+            }
+        }
+        
+        // Load data on page load
+        loadData();
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadData, 30000);
+    </script>
+</body>
+</html> 

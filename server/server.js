@@ -1,0 +1,145 @@
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const path = require('path');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Import guest data
+const { guestsByPhone } = require('./guests.js');
+
+// In-memory cache for validated entries
+const validatedEntries = new Map();
+// In-memory array for newsletter signups
+const newsletterList = [];
+
+// Middleware
+app.use(helmet());
+app.use(cors());
+app.use(express.json());
+
+// Serve static files from client directory
+app.use(express.static(path.join(__dirname, '../client')));
+
+// Rate limiting to prevent abuse
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: 'יותר מדי ניסיונות, נסה שוב מאוחר יותר'
+});
+
+app.use('/api/', limiter);
+
+// API endpoint for phone validation
+app.post('/api/validate', (req, res) => {
+    const { phone } = req.body;
+    
+    if (!phone) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'מספר טלפון חסר' 
+        });
+    }
+    
+    // Clean phone number
+    const cleanedPhone = phone.replace(/\D/g, '');
+    
+    // Validate phone format
+    if (cleanedPhone.length !== 10 || !cleanedPhone.startsWith('05')) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'מספר טלפון לא תקין' 
+        });
+    }
+    
+    // Check if already validated
+    if (validatedEntries.has(cleanedPhone)) {
+        const entry = validatedEntries.get(cleanedPhone);
+        return res.status(403).json({ 
+            success: false, 
+            message: 'מספר זה כבר אומת בעבר',
+            validatedAt: entry.timestamp,
+            validatedBy: entry.name
+        });
+    }
+    
+    // Check guest list
+    const guest = guestsByPhone[cleanedPhone];
+    
+    if (guest && guest.tickets > 0) {
+        // Mark as validated
+        validatedEntries.set(cleanedPhone, {
+            name: guest.name,
+            tickets: guest.tickets,
+            timestamp: new Date().toISOString(),
+            ip: req.ip
+        });
+        
+        return res.json({
+            success: true,
+            guest: {
+                name: guest.name,
+                tickets: guest.tickets
+            }
+        });
+    }
+    
+    // Not in guest list
+    return res.status(404).json({ 
+        success: false, 
+        message: 'לא נמצא ברשימת האורחים' 
+    });
+});
+
+// API endpoint to check validation status (for admin)
+app.get('/api/status', (req, res) => {
+    const stats = {
+        totalGuests: Object.keys(guestsByPhone).length,
+        validatedCount: validatedEntries.size,
+        totalTickets: Object.values(guestsByPhone).reduce((sum, guest) => sum + guest.tickets, 0),
+        validatedTickets: Array.from(validatedEntries.values()).reduce((sum, entry) => sum + entry.tickets, 0)
+    };
+    
+    res.json(stats);
+});
+
+// API endpoint to get validated entries (for admin)
+app.get('/api/validated', (req, res) => {
+    const entries = Array.from(validatedEntries.entries()).map(([phone, data]) => ({
+        phone: phone.substring(0, 3) + '****' + phone.substring(7), // Partial phone for privacy
+        ...data
+    }));
+    
+    res.json(entries);
+});
+
+// API endpoint for newsletter signup
+app.post('/api/newsletter', (req, res) => {
+    const { email, phone } = req.body;
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+        return res.status(400).json({ success: false, message: 'אימייל לא תקין' });
+    }
+    // Prevent duplicate signups
+    if (newsletterList.find(e => e.email.toLowerCase() === email.toLowerCase())) {
+        return res.status(409).json({ success: false, message: 'אימייל זה כבר נרשם' });
+    }
+    newsletterList.push({
+        email,
+        phone,
+        timestamp: new Date().toISOString()
+    });
+    res.json({ success: true });
+});
+
+// Health check
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Start server
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`📊 Loaded ${Object.keys(guestsByPhone).length} guests`);
+}); 

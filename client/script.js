@@ -1,6 +1,7 @@
 // הגדרות
 const DOOR_CODE = '2580#';
 const PAYBOX_LINK = 'https://link.payboxapp.com/JbPjTnSSEqPCZfKG6';
+const API_URL = window.location.origin + '/api';
 
 // DOM Elements
 const form = document.getElementById('gate-form');
@@ -58,8 +59,18 @@ function showSuccess(guest) {
                 הקוד לכניסה הוא <span class="door-code">${DOOR_CODE}</span>
             </p>
             <p class="engagement-options">
-                רוצים להישאר מעודכנים? הצטרפו לניוזלטר שלנו! 📫<br>
-                או צלמו סלפי מגניב ושמרו אותו לבדיחה שתגיע בהמשך... 🤳
+                <label class="newsletter-checkbox">
+                    <input type="checkbox" id="newsletter-check"> 
+                    אני רוצה להירשם לניוזלטר
+                </label>
+                <form id="newsletter-form" class="newsletter-form" style="display:none;">
+                    <input type="email" id="newsletter-email" placeholder="האימייל שלך" class="newsletter-input">
+                    <button type="submit" class="newsletter-submit-btn">הרשמה</button>
+                    <div id="newsletter-status" class="newsletter-status"></div>
+                </form>
+                <div style="margin-top: 16px; font-size: 0.9rem; opacity: 0.9;">
+                    או צלמו סלפי מגניב ושמרו אותו לבדיחה שתגיע בהמשך... 🤳
+                </div>
             </p>
         </div>
         <div class="entry-instructions">
@@ -72,6 +83,49 @@ function showSuccess(guest) {
     }
     
     logSuccessfulEntry(guest);
+
+    // Newsletter logic
+    const newsletterCheck = document.getElementById('newsletter-check');
+    const newsletterForm = document.getElementById('newsletter-form');
+    const newsletterEmail = document.getElementById('newsletter-email');
+    const newsletterStatus = document.getElementById('newsletter-status');
+    if (newsletterCheck && newsletterForm) {
+        newsletterCheck.addEventListener('change', () => {
+            newsletterForm.style.display = newsletterCheck.checked ? 'block' : 'none';
+            newsletterStatus.textContent = '';
+            newsletterStatus.className = 'newsletter-status';
+        });
+        newsletterForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = newsletterEmail.value.trim();
+            if (!/^\S+@\S+\.\S+$/.test(email)) {
+                newsletterStatus.textContent = 'אימייל לא תקין';
+                newsletterStatus.className = 'newsletter-status error';
+                return;
+            }
+            newsletterStatus.textContent = 'שולח...';
+            newsletterStatus.className = 'newsletter-status loading';
+            try {
+                const res = await fetch('/api/newsletter', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, phone: guest.phone })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    newsletterStatus.textContent = 'נרשמת בהצלחה!';
+                    newsletterStatus.className = 'newsletter-status success';
+                    newsletterEmail.disabled = true;
+                } else {
+                    newsletterStatus.textContent = data.message || 'שגיאה בהרשמה';
+                    newsletterStatus.className = 'newsletter-status error';
+                }
+            } catch (err) {
+                newsletterStatus.textContent = 'שגיאה בחיבור לשרת';
+                newsletterStatus.className = 'newsletter-status error';
+            }
+        });
+    }
 }
 
 // הצג תוצאת כישלון
@@ -175,7 +229,7 @@ function showLoader() {
 }
 
 // Handle form submission
-form.addEventListener('submit', (e) => {
+form.addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const phoneNumber = phoneInput.value.trim();
@@ -194,20 +248,37 @@ form.addEventListener('submit', (e) => {
     showLoader();
     againBtn.classList.add('hidden');
     
-    // Simulate network delay
-    setTimeout(() => {
-        const guest = checkGuest(phoneNumber);
+    try {
+        // Call API
+        const response = await fetch(`${API_URL}/validate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ phone: phoneNumber })
+        });
         
-        if (guest) {
-            // Guest found - show success directly
-            showSuccess(guest);
-            againBtn.classList.remove('hidden');
-        } else {
-            // Guest not found - show failure message
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            // Guest found and validated
+            showSuccess(data.guest);
+        } else if (response.status === 403) {
+            // Already validated
+            showAlreadyValidated(data);
+        } else if (response.status === 404) {
+            // Not in guest list
             showFailure();
-            againBtn.classList.remove('hidden');
+        } else {
+            // Other error
+            showError(data.message || 'שגיאה בבדיקה');
         }
-    }, 1500);
+    } catch (error) {
+        console.error('Validation error:', error);
+        showError('שגיאה בחיבור לשרת');
+    }
+    
+    againBtn.classList.remove('hidden');
 });
 
 // טיפול בכפתור "בדיקת מספר נוסף"
@@ -264,4 +335,37 @@ function logSuccessfulEntry(guest) {
         timestamp: new Date().toISOString()
     });
     sessionStorage.setItem('partyEntries', JSON.stringify(entries));
+}
+
+// Show already validated message
+function showAlreadyValidated(data) {
+    resultDiv.className = 'result fail';
+    resultDiv.innerHTML = `
+        <div style="font-size: 1.1rem; margin-bottom: 8px;">
+            ⚠️ ${data.message}
+        </div>
+        <div style="font-size: 0.9rem; opacity: 0.9;">
+            ${data.validatedBy} כבר אומת ב-${new Date(data.validatedAt).toLocaleString('he-IL')}
+        </div>
+        <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 16px;">
+            אם זו טעות, פנו לצוות בכניסה
+        </div>
+    `;
+    
+    if (navigator.vibrate) {
+        navigator.vibrate([200, 100, 200]);
+    }
+}
+
+// Show error message
+function showError(message) {
+    resultDiv.className = 'result fail';
+    resultDiv.innerHTML = `
+        <div style="font-size: 1.1rem; margin-bottom: 8px;">
+            ❌ ${message}
+        </div>
+        <div style="font-size: 0.9rem; opacity: 0.9;">
+            נסה שוב או פנה לצוות
+        </div>
+    `;
 } 
