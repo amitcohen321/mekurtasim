@@ -49,10 +49,20 @@ function checkGuest(phoneNumber) {
 function showSuccess(guest) {
     resultDiv.className = 'result success';
     resultDiv.innerHTML = `
-        <div class="welcome-name">✨ ברוכים הבאים ${guest.name}! ✨</div>
+        <div class="welcome-name" style="text-align: center;">✨ ברוכים הבאים ${guest.name}! ✨</div>
         <div class="tickets-info">
             🎟️ רשומים על שמך ${guest.tickets} כרטיסים
         </div>
+        ${guest.uniqueCode ? `
+        <div class="unique-code-section" style="background: rgba(255,255,255,0.15); padding: 20px; margin: 20px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.3);">
+            <div style="font-size: 1.1rem; margin-bottom: 8px; font-weight: bold;">🎫 הקוד האישי שלך:</div>
+            <div class="unique-code" style="font-size: 2rem; font-weight: bold; letter-spacing: 4px; font-family: 'Courier New', monospace; color: #FFD700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); text-align: center; margin: 12px 0;">${guest.uniqueCode}</div>
+            <div style="font-size: 0.9rem; color: rgba(255,255,255,0.8); margin-top: 8px; line-height: 1.4;">
+                <strong>הראו קוד זה לצוות בכניסה</strong><br>
+                הקוד חד פעמי ואישי עבורכם
+            </div>
+        </div>
+        ` : ''}
         <div class="welcome-text">
             <p>
                 ברוכים הבאים למסיבה! השקענו המון כדי שתהיה לכם חוויה מדהימה. 
@@ -61,16 +71,13 @@ function showSuccess(guest) {
             <p class="engagement-options">
                 <label class="newsletter-checkbox">
                     <input type="checkbox" id="newsletter-check"> 
-                    אני רוצה להירשם לניוזלטר
+                    אני רוצה לדעת על עוד מסיבות כאלה 🎉
                 </label>
                 <form id="newsletter-form" class="newsletter-form" style="display:none;">
                     <input type="email" id="newsletter-email" placeholder="האימייל שלך" class="newsletter-input">
                     <button type="submit" class="newsletter-submit-btn">הרשמה</button>
                     <div id="newsletter-status" class="newsletter-status"></div>
                 </form>
-                <div style="margin-top: 16px; font-size: 0.9rem; opacity: 0.9;">
-                    או צלמו סלפי מגניב ושמרו אותו לבדיחה שתגיע בהמשך... 🤳
-                </div>
             </p>
         </div>
         <div class="entry-instructions">
@@ -81,6 +88,13 @@ function showSuccess(guest) {
     if (navigator.vibrate) {
         navigator.vibrate([100, 50, 100]);
     }
+    
+    // Store successful validation in localStorage
+    localStorage.setItem('partyValidated', JSON.stringify({
+        guest: guest,
+        timestamp: new Date().toISOString(),
+        validated: true
+    }));
     
     logSuccessfulEntry(guest);
 
@@ -140,6 +154,9 @@ function showFailure() {
         </div>
         <a href="${PAYBOX_LINK}" target="_blank" class="paybox-btn">
             💳 רכישת כרטיס דרך PayBox
+        </a>
+        <a href="https://wa.me/9728294080?text=שלום, אני לא נמצא ברשימת האורחים למסיבת הגג. האם יש אפשרות להצטרף?" target="_blank" class="paybox-btn" style="background: #81C784; margin-top: 8px; display: block; text-align: center;">
+            📲 פנייה למנהל בוואטסאפ
         </a>
     `;
     
@@ -305,6 +322,37 @@ phoneInput.addEventListener('input', (e) => {
 
 // התמקדות בשדה הטלפון בטעינת העמוד
 window.addEventListener('load', () => {
+    // Check if user was already validated
+    const previousValidation = localStorage.getItem('partyValidated');
+    if (previousValidation) {
+        try {
+            const validationData = JSON.parse(previousValidation);
+            if (validationData.validated && validationData.guest) {
+                // Hide form and show success screen
+                form.classList.add('hidden');
+                againBtn.classList.add('hidden');
+                
+                // Show previous success
+                showSuccess(validationData.guest);
+                
+                // Hide the "again" button since they can't search again
+                againBtn.style.display = 'none';
+                
+                // Show a different message indicating they're already validated
+                const alreadyValidatedMsg = document.createElement('div');
+                alreadyValidatedMsg.style.cssText = 'text-align: center; margin-top: 20px; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px; font-size: 0.9rem; opacity: 0.8;';
+                alreadyValidatedMsg.innerHTML = 'כבר אומתת בעבר - אין צורך לחפש שוב 👍';
+                resultDiv.appendChild(alreadyValidatedMsg);
+                
+                return;
+            }
+        } catch (e) {
+            // If there's an error parsing, clear the localStorage and continue normally
+            localStorage.removeItem('partyValidated');
+        }
+    }
+    
+    // Normal flow - focus on input
     phoneInput.focus();
 });
 
@@ -347,9 +395,21 @@ function showAlreadyValidated(data) {
         <div style="font-size: 0.9rem; opacity: 0.9;">
             ${data.validatedBy} כבר אומת ב-${new Date(data.validatedAt).toLocaleString('he-IL')}
         </div>
+        ${data.uniqueCode ? `
+        <div class="unique-code-section" style="background: rgba(255,255,255,0.1); padding: 16px; margin: 16px 0; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);">
+            <div style="font-size: 1rem; margin-bottom: 6px; font-weight: bold;">🎫 הקוד האישי שלך:</div>
+            <div class="unique-code" style="font-size: 1.5rem; font-weight: bold; letter-spacing: 3px; font-family: 'Courier New', monospace; color: #FFD700; text-align: center; margin: 8px 0;">${data.uniqueCode}</div>
+            <div style="font-size: 0.8rem; color: rgba(255,255,255,0.7); margin-top: 6px;">
+                הראו קוד זה לצוות בכניסה
+            </div>
+        </div>
+        ` : ''}
         <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 16px;">
             אם זו טעות, פנו לצוות בכניסה
         </div>
+        <a href="https://wa.me/9728294080?text=שלום, המספר שלי כבר אומת אבל אני צריך עזרה" target="_blank" class="paybox-btn" style="background: #81C784; margin-top: 12px; display: block; text-align: center;">
+            📲 פנייה למנהל בוואטסאפ
+        </a>
     `;
     
     if (navigator.vibrate) {
@@ -367,5 +427,8 @@ function showError(message) {
         <div style="font-size: 0.9rem; opacity: 0.9;">
             נסה שוב או פנה לצוות
         </div>
+        <a href="https://wa.me/9728294080?text=שלום, יש לי בעיה טכנית באתר מסיבת הגג" target="_blank" class="paybox-btn" style="background: #81C784; margin-top: 12px; display: block; text-align: center;">
+            📲 פנייה למנהל בוואטסאפ
+        </a>
     `;
 } 

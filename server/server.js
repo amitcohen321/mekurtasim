@@ -16,6 +16,28 @@ const validatedEntries = new Map();
 // In-memory array for newsletter signups
 const newsletterList = [];
 
+// Function to generate unique 6-character code
+function generateUniqueCode() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code;
+    let attempts = 0;
+    
+    do {
+        code = '';
+        for (let i = 0; i < 6; i++) {
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        attempts++;
+        // Prevent infinite loop
+        if (attempts > 1000) {
+            code = Date.now().toString(36).toUpperCase().slice(-6);
+            break;
+        }
+    } while (Array.from(validatedEntries.values()).some(entry => entry.uniqueCode === code));
+    
+    return code;
+}
+
 // Middleware
 app.use(helmet({
     contentSecurityPolicy: {
@@ -23,6 +45,7 @@ app.use(helmet({
             defaultSrc: ["'self'"],
             styleSrc: ["'self'", "'unsafe-inline'", "https:"],
             scriptSrc: ["'self'", "'unsafe-inline'"], // Allow inline scripts
+            scriptSrcAttr: ["'unsafe-inline'"], // Allow inline event handlers like onclick
             connectSrc: ["'self'"], // Allow fetch/XHR to same origin
             imgSrc: ["'self'", "data:"],
             fontSrc: ["'self'", "https:", "data:"]
@@ -73,7 +96,8 @@ app.post('/api/validate', (req, res) => {
             success: false, 
             message: 'מספר זה כבר אומת בעבר',
             validatedAt: entry.timestamp,
-            validatedBy: entry.name
+            validatedBy: entry.name,
+            uniqueCode: entry.uniqueCode
         });
     }
     
@@ -86,14 +110,16 @@ app.post('/api/validate', (req, res) => {
             name: guest.name,
             tickets: guest.tickets,
             timestamp: new Date().toISOString(),
-            ip: req.ip
+            ip: req.ip,
+            uniqueCode: generateUniqueCode()
         });
         
         return res.json({
             success: true,
             guest: {
                 name: guest.name,
-                tickets: guest.tickets
+                tickets: guest.tickets,
+                uniqueCode: validatedEntries.get(cleanedPhone).uniqueCode
             }
         });
     }
@@ -159,6 +185,44 @@ app.post('/api/newsletter', (req, res) => {
         timestamp: new Date().toISOString()
     });
     res.json({ success: true });
+});
+
+// API endpoint to get all guests with validation status (for admin)
+app.get('/api/guests', (req, res) => {
+    const guests = Object.entries(guestsByPhone).map(([phone, guest]) => {
+        const validated = validatedEntries.has(phone);
+        const validation = validated ? validatedEntries.get(phone) : null;
+        return {
+            phone: phone.substring(0, 3) + '****' + phone.substring(7), // Masked phone
+            realPhone: phone, // For admin use only, can be removed if not needed
+            name: guest.name,
+            tickets: guest.tickets,
+            validated,
+            validatedAt: validation ? validation.timestamp : null,
+            validatedBy: validation ? validation.name : null,
+            uniqueCode: validation ? validation.uniqueCode : null
+        };
+    });
+    // Sort by name
+    guests.sort((a, b) => a.name.localeCompare(b.name, 'he'));
+    res.json(guests);
+});
+
+// API endpoint to add a new guest (for admin)
+app.post('/api/guests', (req, res) => {
+    const { name, phone, tickets } = req.body;
+    if (!name || !phone || typeof tickets !== 'number') {
+        return res.status(400).json({ success: false, message: 'Missing required fields' });
+    }
+    const cleanedPhone = phone.replace(/\D/g, '');
+    if (cleanedPhone.length !== 10 || !cleanedPhone.startsWith('05')) {
+        return res.status(400).json({ success: false, message: 'Invalid phone number' });
+    }
+    if (guestsByPhone[cleanedPhone]) {
+        return res.status(409).json({ success: false, message: 'Guest with this phone already exists' });
+    }
+    guestsByPhone[cleanedPhone] = { name, tickets };
+    res.json({ success: true, guest: { name, phone: cleanedPhone, tickets } });
 });
 
 // Health check

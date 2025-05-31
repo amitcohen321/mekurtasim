@@ -217,6 +217,73 @@
             font-weight: 600;
         }
         
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: #2d2d2d;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+        
+        .modal-close:hover {
+            opacity: 1;
+        }
+        
+        .guest-detail {
+            margin-bottom: 16px;
+        }
+        
+        .guest-detail-label {
+            color: #FFD700;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+        
+        .guest-detail-value {
+            font-size: 1.1rem;
+            direction: ltr;
+            text-align: right;
+        }
+        
+        .guest-row {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .guest-row:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
@@ -239,6 +306,22 @@
             .entry-details {
                 text-align: right;
             }
+            
+            /* Make add guest form more mobile friendly */
+            #add-guest-form {
+                flex-direction: column;
+                align-items: stretch !important;
+            }
+            
+            #add-guest-form input,
+            #add-guest-form button {
+                width: 100% !important;
+                margin-bottom: 8px;
+            }
+            
+            #guest-search {
+                font-size: 16px; /* Prevent zoom on iOS */
+            }
         }
     </style>
 </head>
@@ -259,8 +342,9 @@
         </div>
         
         <div class="tabs">
-            <button class="tab active" onclick="switchTab('entries')">כניסות אחרונות</button>
-            <button class="tab" onclick="switchTab('newsletter')">הרשמות לניוזלטר</button>
+            <button class="tab active" onclick="switchTab(this, 'entries')">כניסות אחרונות</button>
+            <button class="tab" onclick="switchTab(this, 'newsletter')">הרשמות לניוזלטר</button>
+            <button class="tab" onclick="switchTab(this, 'guests')">רשימת אורחים</button>
         </div>
         
         <div class="tab-content active" id="entries-tab">
@@ -278,6 +362,30 @@
                     <div class="spinner"></div>
                     טוען נתונים...
                 </div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="guests-tab">
+            <div style="margin-bottom: 20px;">
+                <input type="text" id="guest-search" placeholder="חיפוש לפי שם או טלפון..." 
+                       style="width: 100%; padding: 10px; border-radius: 6px; border: none; font-size: 1rem;"
+                       oninput="filterGuests()">
+            </div>
+            <div id="guests-section">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    טוען נתונים...
+                </div>
+            </div>
+            <div id="add-guest-form-section" style="margin-top: 30px;">
+                <h3 style="color:#FFD700; margin-bottom:10px;">הוסף אורח חדש</h3>
+                <form id="add-guest-form" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                    <input type="text" id="guest-name" placeholder="שם מלא" required style="padding:8px; border-radius:6px; border:none; min-width:120px;">
+                    <input type="text" id="guest-phone" placeholder="05xxxxxxxx" required pattern="05[0-9]{8}" style="padding:8px; border-radius:6px; border:none; min-width:120px;">
+                    <input type="number" id="guest-tickets" placeholder="כרטיסים" required min="1" max="10" style="padding:8px; border-radius:6px; border:none; width:80px;">
+                    <button type="submit" class="btn">הוסף</button>
+                    <span id="add-guest-status" style="margin-right:10px;font-size:0.95rem;"></span>
+                </form>
             </div>
         </div>
     </div>
@@ -332,6 +440,8 @@
                 await loadEntries();
                 console.log('📧 Loading newsletter...');
                 await loadNewsletter();
+                console.log('👥 Loading guests...');
+                await loadGuests();
                 
                 console.log('✅ loadData completed successfully!');
                 
@@ -398,14 +508,117 @@
             }
         }
         
-        function switchTab(tabName) {
+        async function loadGuests() {
+            const section = document.getElementById('guests-section');
+            try {
+                section.innerHTML = '<div class="loading"><div class="spinner"></div>טוען נתונים...</div>';
+                const res = await fetch('/api/guests');
+                const guests = await res.json();
+                // Store guests globally for search
+                window.allGuests = guests;
+                if (!Array.isArray(guests) || guests.length === 0) {
+                    section.innerHTML = '<div style="text-align:center;opacity:0.7;padding:30px;">אין אורחים ברשימה</div>';
+                    return;
+                }
+                displayGuests(guests);
+            } catch (err) {
+                section.innerHTML = '<div class="loading">שגיאה בטעינת אורחים</div>';
+            }
+        }
+        
+        function displayGuests(guests) {
+            const section = document.getElementById('guests-section');
+            const tableWrapper = document.createElement('div');
+            tableWrapper.style.overflowX = 'auto';
+            tableWrapper.style.WebkitOverflowScrolling = 'touch';
+            tableWrapper.style.marginTop = '10px';
+            
+            const table = document.createElement('table');
+            table.style.width = '100%';
+            table.style.background = 'rgba(255,255,255,0.05)';
+            table.style.borderRadius = '10px';
+            table.style.minWidth = '400px';
+            table.style.fontSize = '0.85rem';
+            
+            const isMobile = window.innerWidth <= 768;
+            
+            table.innerHTML = `
+                <thead>
+                    <tr style="background:#222;color:#FFD700;">
+                        <th style="padding:${isMobile ? '4px' : '8px'}; font-size: ${isMobile ? '0.8rem' : '0.9rem'};">שם</th>
+                        <th style="padding:${isMobile ? '4px' : '8px'}; font-size: ${isMobile ? '0.8rem' : '0.9rem'};">טלפון</th>
+                        <th style="padding:${isMobile ? '4px' : '8px'}; font-size: ${isMobile ? '0.8rem' : '0.9rem'};">כרטיסים</th>
+                        <th style="padding:${isMobile ? '4px' : '8px'}; font-size: ${isMobile ? '0.8rem' : '0.9rem'};">אומת?</th>
+                        <th style="padding:${isMobile ? '4px' : '8px'}; font-size: ${isMobile ? '0.8rem' : '0.9rem'};">קוד</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${guests.map((g, index) => `
+                        <tr class="guest-row" style="text-align:center;" onclick='showGuestDetails(${JSON.stringify(g).replace(/'/g, "&#39;")})'>
+                            <td style="padding:${isMobile ? '4px' : '8px'}; font-size: ${isMobile ? '0.75rem' : '0.85rem'};">${g.name}</td>
+                            <td style="padding:${isMobile ? '4px' : '8px'}; direction: ltr; font-size: ${isMobile ? '0.75rem' : '0.85rem'};">${g.realPhone || g.phone}</td>
+                            <td style="padding:${isMobile ? '4px' : '8px'}; direction: ltr; font-size: ${isMobile ? '0.75rem' : '0.85rem'};">${g.tickets}</td>
+                            <td style="padding:${isMobile ? '4px' : '8px'}; font-size: ${isMobile ? '0.75rem' : '0.85rem'};">${g.validated ? '✅' : '❌'}</td>
+                            <td style="padding:${isMobile ? '4px' : '8px'}; font-size: ${isMobile ? '0.65rem' : '0.75rem'}; font-family: monospace; direction: ltr;">${g.uniqueCode || '-'}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+            
+            section.innerHTML = '';
+            tableWrapper.appendChild(table);
+            section.appendChild(tableWrapper);
+            
+            // Update guest count
+            const countInfo = document.createElement('div');
+            countInfo.style.marginTop = '10px';
+            countInfo.style.textAlign = 'center';
+            countInfo.style.opacity = '0.8';
+            countInfo.style.fontSize = isMobile ? '0.8rem' : '0.9rem';
+            countInfo.innerHTML = `מציג ${guests.length} אורחים`;
+            section.appendChild(countInfo);
+            
+            // Add scroll hint on mobile
+            if (isMobile && guests.length > 0) {
+                const scrollHint = document.createElement('div');
+                scrollHint.style.marginTop = '5px';
+                scrollHint.style.textAlign = 'center';
+                scrollHint.style.opacity = '0.6';
+                scrollHint.style.fontSize = '0.7rem';
+                scrollHint.innerHTML = 'לחץ על אורח לפרטים נוספים';
+                section.appendChild(scrollHint);
+            }
+        }
+        
+        function filterGuests() {
+            const searchTerm = document.getElementById('guest-search').value.toLowerCase();
+            if (!window.allGuests) return;
+            
+            const filtered = window.allGuests.filter(guest => 
+                guest.name.toLowerCase().includes(searchTerm) || 
+                (guest.realPhone || guest.phone).includes(searchTerm)
+            );
+            
+            displayGuests(filtered);
+        }
+        
+        function switchTab(clickedTab, tabName) {
+            console.log('switchTab called with tabName:', tabName);
+            console.log('clickedTab element:', clickedTab);
+            
             // Update tab buttons
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            event.target.classList.add('active');
+            clickedTab.classList.add('active');
             
             // Update tab content
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            document.getElementById(tabName + '-tab').classList.add('active');
+            const targetContent = document.getElementById(tabName + '-tab');
+            console.log('Target content element:', targetContent);
+            if (targetContent) {
+                targetContent.classList.add('active');
+            } else {
+                console.error('Tab content not found for:', tabName + '-tab');
+            }
         }
         
         function exportData() {
@@ -428,8 +641,57 @@
             URL.revokeObjectURL(url);
         }
         
+        // Add guest form logic
+        document.getElementById('add-guest-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('guest-name').value.trim();
+            const phone = document.getElementById('guest-phone').value.trim();
+            const tickets = parseInt(document.getElementById('guest-tickets').value, 10);
+            const status = document.getElementById('add-guest-status');
+            status.textContent = '';
+            if (!name || !phone || !/^05\d{8}$/.test(phone) || !tickets || tickets < 1) {
+                status.textContent = 'נא למלא את כל השדות בצורה תקינה';
+                status.style.color = 'red';
+                return;
+            }
+            status.textContent = 'מוסיף...';
+            status.style.color = '#FFD700';
+            try {
+                const res = await fetch('/api/guests', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, phone, tickets })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    status.textContent = 'אורח נוסף בהצלחה!';
+                    status.style.color = 'green';
+                    document.getElementById('add-guest-form').reset();
+                    await loadGuests();
+                    await loadData(); // Refresh stats
+                } else {
+                    status.textContent = data.message || 'שגיאה בהוספה';
+                    status.style.color = 'red';
+                }
+            } catch (err) {
+                status.textContent = 'שגיאה בחיבור לשרת';
+                status.style.color = 'red';
+            }
+        });
+        
         // Load data on page load
         loadData();
+        
+        // Handle window resize for responsive table
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (window.allGuests && document.getElementById('guests-tab').classList.contains('active')) {
+                    displayGuests(window.allGuests);
+                }
+            }, 250);
+        });
         
         // Auto-refresh every 30 seconds
         setInterval(loadData, 30000);
@@ -439,6 +701,65 @@
             const now = new Date().toLocaleTimeString('he-IL');
             document.title = `מסיבת גג - ניהול כניסות (${now})`;
         }, 1000);
+        
+        let selectedGuest = null;
+        
+        function showGuestDetails(guest) {
+            selectedGuest = guest;
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.onclick = (e) => {
+                if (e.target === modal) closeModal();
+            };
+            
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <button class="modal-close" onclick="closeModal()">×</button>
+                    <h2 style="color: #FFD700; margin-bottom: 20px; text-align: center;">${guest.name}</h2>
+                    
+                    <div class="guest-detail">
+                        <div class="guest-detail-label">טלפון</div>
+                        <div class="guest-detail-value">${guest.realPhone || guest.phone}</div>
+                    </div>
+                    
+                    <div class="guest-detail">
+                        <div class="guest-detail-label">כרטיסים</div>
+                        <div class="guest-detail-value">${guest.tickets}</div>
+                    </div>
+                    
+                    <div class="guest-detail">
+                        <div class="guest-detail-label">סטטוס</div>
+                        <div class="guest-detail-value">${guest.validated ? '✅ אומת' : '❌ לא אומת'}</div>
+                    </div>
+                    
+                    ${guest.uniqueCode ? `
+                        <div class="guest-detail">
+                            <div class="guest-detail-label">קוד אישי</div>
+                            <div class="guest-detail-value" style="font-family: monospace; font-size: 1.2rem; font-weight: bold; color: #FFD700; letter-spacing: 2px;">${guest.uniqueCode}</div>
+                        </div>
+                    ` : ''}
+                    
+                    ${guest.validated ? `
+                        <div class="guest-detail">
+                            <div class="guest-detail-label">אומת על ידי</div>
+                            <div class="guest-detail-value">${guest.validatedBy || 'לא ידוע'}</div>
+                        </div>
+                        
+                        <div class="guest-detail">
+                            <div class="guest-detail-label">זמן אימות</div>
+                            <div class="guest-detail-value">${new Date(guest.validatedAt).toLocaleString('he-IL')}</div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+        
+        function closeModal() {
+            const modal = document.querySelector('.modal-overlay');
+            if (modal) modal.remove();
+        }
     </script>
 </body>
 </html> 
