@@ -5,6 +5,7 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 
 const app = express();
+app.set('trust proxy', 1); // trust first proxy for correct IP detection behind Render/Heroku/etc.
 const PORT = process.env.PORT || 3000;
 
 // Import guest data
