@@ -1,6 +1,5 @@
 // הגדרות
 const DOOR_CODE = '2580#';
-const PAYBOX_LINK = 'https://link.payboxapp.com/JbPjTnSSEqPCZfKG6';
 const API_URL = window.location.origin + '/api';
 
 // DOM Elements
@@ -50,13 +49,17 @@ function showSuccess(guest) {
     resultDiv.className = 'result success';
     resultDiv.innerHTML = `
         <div class="welcome-name" style="text-align: center;">✨ ברוכים הבאים ${guest.name}! ✨</div>
+        <div class="entrance-code-section" style="background: rgba(255,255,255,0.2); padding: 16px; margin: 16px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.4); text-align: center;">
+            <div style="font-size: 1.1rem; margin-bottom: 8px; font-weight: bold;">🚪 קוד כניסה לדלת:</div>
+            <div class="door-code" style="font-size: 2rem; font-weight: bold; letter-spacing: 4px; font-family: 'Courier New', monospace; color: #FFD700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">${DOOR_CODE}</div>
+        </div>
         <div class="tickets-info">
             🎟️ רשומים על שמך ${guest.tickets} כרטיסים
         </div>
         ${guest.uniqueCode ? `
         <div class="unique-code-section" style="background: rgba(255,255,255,0.15); padding: 20px; margin: 20px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.3);">
             <div style="font-size: 1.1rem; margin-bottom: 8px; font-weight: bold;">🎫 הקוד האישי שלך:</div>
-            <div class="unique-code" style="font-size: 2rem; font-weight: bold; letter-spacing: 4px; font-family: 'Courier New', monospace; color: #FFD700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); text-align: center; margin: 12px 0;">${guest.uniqueCode}</div>
+            <div class="unique-code" style="font-size: 2.5rem; font-weight: bold; letter-spacing: 6px; font-family: 'Courier New', monospace; color: #FFD700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); text-align: center; margin: 12px 0;">${guest.uniqueCode}</div>
             <div style="font-size: 0.9rem; color: rgba(255,255,255,0.8); margin-top: 8px; line-height: 1.4;">
                 <strong>הראו קוד זה לצוות בכניסה</strong><br>
                 הקוד חד פעמי ואישי עבורכם
@@ -64,10 +67,6 @@ function showSuccess(guest) {
         </div>
         ` : ''}
         <div class="welcome-text">
-            <p>
-                ברוכים הבאים למסיבה! השקענו המון כדי שתהיה לכם חוויה מדהימה. 
-                הקוד לכניסה הוא <span class="door-code">${DOOR_CODE}</span>
-            </p>
             <p class="engagement-options">
                 <label class="newsletter-checkbox">
                     <input type="checkbox" id="newsletter-check"> 
@@ -149,12 +148,6 @@ function showFailure() {
         <div style="font-size: 1.1rem; margin-bottom: 8px;">
             ❌ מצטערים, אינך ברשימת האורחים
         </div>
-        <div style="font-size: 0.9rem; opacity: 0.9;">
-            לא הוזמנת? עדיין אפשר להצטרף למסיבה!
-        </div>
-        <a href="${PAYBOX_LINK}" target="_blank" class="paybox-btn">
-            💳 רכישת כרטיס דרך PayBox
-        </a>
         <a href="https://wa.me/9728294080?text=שלום, אני לא נמצא ברשימת האורחים למסיבת הגג. האם יש אפשרות להצטרף?" target="_blank" class="paybox-btn" style="background: #81C784; margin-top: 8px; display: block; text-align: center;">
             📲 פנייה למנהל בוואטסאפ
         </a>

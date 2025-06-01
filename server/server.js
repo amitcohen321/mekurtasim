@@ -16,21 +16,19 @@ const validatedEntries = new Map();
 // In-memory array for newsletter signups
 const newsletterList = [];
 
-// Function to generate unique 6-character code
+// Function to generate unique 4-digit code
 function generateUniqueCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code;
     let attempts = 0;
     
     do {
-        code = '';
-        for (let i = 0; i < 6; i++) {
-            code += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
+        // Generate 4-digit code (1000-9999)
+        code = Math.floor(Math.random() * 9000 + 1000).toString();
         attempts++;
         // Prevent infinite loop
         if (attempts > 1000) {
-            code = Date.now().toString(36).toUpperCase().slice(-6);
+            // Fallback: use last 4 digits of timestamp
+            code = Date.now().toString().slice(-4);
             break;
         }
     } while (Array.from(validatedEntries.values()).some(entry => entry.uniqueCode === code));
