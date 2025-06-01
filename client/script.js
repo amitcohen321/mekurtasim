@@ -67,17 +67,6 @@ function showSuccess(guest) {
         </div>
         ` : ''}
         <div class="welcome-text">
-            <p class="engagement-options">
-                <label class="newsletter-checkbox">
-                    <input type="checkbox" id="newsletter-check"> 
-                    אני רוצה לדעת על עוד מסיבות כאלה 🎉
-                </label>
-                <form id="newsletter-form" class="newsletter-form" style="display:none;">
-                    <input type="email" id="newsletter-email" placeholder="האימייל שלך" class="newsletter-input">
-                    <button type="submit" class="newsletter-submit-btn">הרשמה</button>
-                    <div id="newsletter-status" class="newsletter-status"></div>
-                </form>
-            </p>
         </div>
         <div class="entry-instructions">
             אנחנו כבר מחכים לכם בפנים! 🎉
@@ -96,49 +85,6 @@ function showSuccess(guest) {
     }));
     
     logSuccessfulEntry(guest);
-
-    // Newsletter logic
-    const newsletterCheck = document.getElementById('newsletter-check');
-    const newsletterForm = document.getElementById('newsletter-form');
-    const newsletterEmail = document.getElementById('newsletter-email');
-    const newsletterStatus = document.getElementById('newsletter-status');
-    if (newsletterCheck && newsletterForm) {
-        newsletterCheck.addEventListener('change', () => {
-            newsletterForm.style.display = newsletterCheck.checked ? 'block' : 'none';
-            newsletterStatus.textContent = '';
-            newsletterStatus.className = 'newsletter-status';
-        });
-        newsletterForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = newsletterEmail.value.trim();
-            if (!/^\S+@\S+\.\S+$/.test(email)) {
-                newsletterStatus.textContent = 'אימייל לא תקין';
-                newsletterStatus.className = 'newsletter-status error';
-                return;
-            }
-            newsletterStatus.textContent = 'שולח...';
-            newsletterStatus.className = 'newsletter-status loading';
-            try {
-                const res = await fetch('/api/newsletter', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, phone: guest.phone })
-                });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    newsletterStatus.textContent = 'נרשמת בהצלחה!';
-                    newsletterStatus.className = 'newsletter-status success';
-                    newsletterEmail.disabled = true;
-                } else {
-                    newsletterStatus.textContent = data.message || 'שגיאה בהרשמה';
-                    newsletterStatus.className = 'newsletter-status error';
-                }
-            } catch (err) {
-                newsletterStatus.textContent = 'שגיאה בחיבור לשרת';
-                newsletterStatus.className = 'newsletter-status error';
-            }
-        });
-    }
 }
 
 // הצג תוצאת כישלון

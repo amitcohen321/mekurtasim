@@ -25,11 +25,15 @@
                 const validatedData = await validatedResponse.json();
                 result.innerHTML += `Validated: ${JSON.stringify(validatedData)}<br>`;
                 
-                // Test newsletter endpoint
-                result.innerHTML += 'Testing /api/newsletter-list...<br>';
-                const newsletterResponse = await fetch('/api/newsletter-list');
-                const newsletterData = await newsletterResponse.json();
-                result.innerHTML += `Newsletter: ${JSON.stringify(newsletterData)}<br>`;
+                // Test health endpoint
+                result.innerHTML += 'Testing /api/health...<br>';
+                const healthResponse = await fetch('/api/health');
+                const healthData = await healthResponse.json();
+                result.innerHTML += `Health: ${JSON.stringify(healthData)}<br>`;
+                
+                // Test guest list endpoint
+                result.innerHTML += 'Testing /api/guests...<br>';
+                const guestsResponse = await fetch('/api/guests');
                 
                 result.innerHTML += '<br>All tests completed successfully!';
                 

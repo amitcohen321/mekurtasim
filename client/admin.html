@@ -12,17 +12,26 @@
             box-sizing: border-box;
         }
         
+        html, body {
+            overflow-x: hidden; /* Prevent horizontal scrolling */
+            width: 100%;
+            height: 100%;
+        }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
             color: #fff;
             padding: 20px;
             min-height: 100vh;
+            position: relative; /* Ensure proper positioning context */
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
+            width: 100%; /* Ensure it doesn't exceed viewport */
+            overflow-x: hidden; /* Prevent any internal horizontal overflow */
         }
         
         h1 {
@@ -148,10 +157,47 @@
             padding: 20px;
             max-height: 600px;
             overflow-y: auto;
+            position: relative;
         }
         
         .tab-content.active {
             display: block;
+        }
+        
+        /* Special styling for guests tab to make search sticky */
+        #guests-tab {
+            padding: 0;
+            display: none;
+            min-height: 500px; /* Added to maintain consistent height */
+        }
+        
+        #guests-tab.active {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .guests-search-header {
+            padding: 20px 20px 10px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+        
+        .guests-content-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 20px 20px 20px;
+            max-height: calc(600px - 70px); /* Account for search header height */
+            min-height: 400px; /* Added minimum height to prevent collapse */
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #guests-section {
+            flex: 1;
+            min-height: 300px; /* Ensure the table area has minimum height */
         }
         
         .entry {
@@ -284,9 +330,81 @@
             background: rgba(255, 255, 255, 0.1);
         }
         
+        /* Styles for Code Validation Section */
+        .code-validation-section {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(255,156,66,0.1) 0%, rgba(255,215,0,0.1) 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(255,215,0,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .code-validation-section h3 {
+            color:#FFD700;
+            margin-bottom:20px;
+            font-size: 1.8rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        #validation-code-input {
+            padding: 20px;
+            font-size: 2rem; /* Increased from 1.8rem */
+            border-radius: 12px;
+            border: 2px solid rgba(255,215,0,0.5);
+            background: rgba(0,0,0,0.5);
+            color: #FFD700;
+            text-align: center;
+            width: 100%; 
+            max-width: 350px; 
+            margin: 0 auto 20px auto; /* Center block input */
+            display: block;
+            -moz-appearance: textfield; /* Remove arrows for Firefox */
+            font-weight: bold;
+            letter-spacing: 8px;
+            transition: all 0.3s ease;
+        }
+        #validation-code-input:focus {
+            outline: none;
+            border-color: #FFD700;
+            box-shadow: 0 0 20px rgba(255,215,0,0.3);
+        }
+        #validation-code-input::-webkit-outer-spin-button,
+        #validation-code-input::-webkit-inner-spin-button {
+            -webkit-appearance: none; /* Remove arrows for Chrome, Safari, Edge, Opera */
+            margin: 0;
+        }
+        .code-validation-section .btn {
+            padding: 16px 40px;
+            font-size: 1.4rem; /* Increased from 1.3rem */
+            min-width: 180px;
+            line-height: 1.5; /* Added for more height */
+            background: linear-gradient(135deg, #FF9C42 0%, #FFD700 100%);
+            box-shadow: 0 4px 12px rgba(255,156,66,0.3);
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        .code-validation-section .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,156,66,0.4);
+        }
+        #code-validation-status {
+            display: block;
+            margin-top: 20px;
+            font-size: 1.2rem;
+            min-height: 1.5em; 
+            color: #fff; /* Default color */
+            font-weight: 500;
+        }
+        /* End Styles for Code Validation Section */
+        
         @media (max-width: 768px) {
+            body {
+                padding: 10px; /* Reduced from 20px to give more room */
+            }
+            
             .container {
-                padding: 10px;
+                padding: 0; /* Remove extra padding on mobile */
             }
             
             h1 {
@@ -317,10 +435,22 @@
             #add-guest-form button {
                 width: 100% !important;
                 margin-bottom: 8px;
+                padding-top: 10px; /* Added for more height */
+                padding-bottom: 10px; /* Added for more height */
             }
             
             #guest-search {
                 font-size: 16px; /* Prevent zoom on iOS */
+            }
+            
+            /* Ensure code validation input doesn't overflow */
+            #validation-code-input {
+                max-width: 280px; /* Reduced for mobile */
+            }
+            
+            /* Ensure table doesn't overflow */
+            table {
+                font-size: 0.8rem; /* Slightly smaller on mobile */
             }
         }
     </style>
@@ -341,51 +471,50 @@
             </div>
         </div>
         
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab(this, 'entries')">כניסות אחרונות</button>
-            <button class="tab" onclick="switchTab(this, 'newsletter')">הרשמות לניוזלטר</button>
-            <button class="tab" onclick="switchTab(this, 'guests')">רשימת אורחים</button>
+        <div class="code-validation-section">
+            <h3>אימות מהיר באמצעות קוד</h3>
+            <input type="number" id="validation-code-input" placeholder="הכנס קוד בן 4 ספרות" inputmode="numeric" maxlength="4" pattern="\d{4}" oninput="this.value=this.value.slice(0,4)">
+            <button class="btn" onclick="validateByCode()">אשר קוד</button>
+            <div id="code-validation-status"></div>
         </div>
         
-        <div class="tab-content active" id="entries-tab">
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab(this, 'guests')">רשימת אורחים</button>
+            <button class="tab" onclick="switchTab(this, 'entries')">כניסות אחרונות</button>
+        </div>
+        
+        <div class="tab-content active" id="guests-tab">
+            <div class="guests-search-header">
+                <input type="text" id="guest-search" placeholder="חיפוש לפי שם או טלפון..." 
+                       style="width: 100%; padding: 14px; border-radius: 8px; border: none; font-size: 1.3rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
+                       oninput="filterGuests()">
+            </div>
+            <div class="guests-content-wrapper">
+                <div id="guests-section">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        טוען נתונים...
+                    </div>
+                </div>
+                <div id="add-guest-form-section" style="margin-top: 30px;">
+                    <h3 style="color:#FFD700; margin-bottom:10px;">הוסף אורח חדש</h3>
+                    <form id="add-guest-form" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                        <input type="text" id="guest-name" placeholder="שם מלא" required style="padding:8px; border-radius:6px; border:none; min-width:120px;">
+                        <input type="text" id="guest-phone" placeholder="05xxxxxxxx" required pattern="05[0-9]{8}" style="padding:8px; border-radius:6px; border:none; min-width:120px;">
+                        <input type="number" id="guest-tickets" placeholder="כרטיסים" required min="1" max="10" style="padding:8px; border-radius:6px; border:none; width:80px;">
+                        <button type="submit" class="btn" style="padding-top: 10px; padding-bottom: 10px; line-height: 1.5;">הוסף</button>
+                        <span id="add-guest-status" style="margin-right:10px;font-size:0.95rem;"></span>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="entries-tab">
             <div id="entries">
                 <div class="loading">
                     <div class="spinner"></div>
                     טוען נתונים...
                 </div>
-            </div>
-        </div>
-        
-        <div class="tab-content" id="newsletter-tab">
-            <div id="newsletter">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    טוען נתונים...
-                </div>
-            </div>
-        </div>
-        
-        <div class="tab-content" id="guests-tab">
-            <div style="margin-bottom: 20px;">
-                <input type="text" id="guest-search" placeholder="חיפוש לפי שם או טלפון..." 
-                       style="width: 100%; padding: 10px; border-radius: 6px; border: none; font-size: 1rem;"
-                       oninput="filterGuests()">
-            </div>
-            <div id="guests-section">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    טוען נתונים...
-                </div>
-            </div>
-            <div id="add-guest-form-section" style="margin-top: 30px;">
-                <h3 style="color:#FFD700; margin-bottom:10px;">הוסף אורח חדש</h3>
-                <form id="add-guest-form" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-                    <input type="text" id="guest-name" placeholder="שם מלא" required style="padding:8px; border-radius:6px; border:none; min-width:120px;">
-                    <input type="text" id="guest-phone" placeholder="05xxxxxxxx" required pattern="05[0-9]{8}" style="padding:8px; border-radius:6px; border:none; min-width:120px;">
-                    <input type="number" id="guest-tickets" placeholder="כרטיסים" required min="1" max="10" style="padding:8px; border-radius:6px; border:none; width:80px;">
-                    <button type="submit" class="btn">הוסף</button>
-                    <span id="add-guest-status" style="margin-right:10px;font-size:0.95rem;"></span>
-                </form>
             </div>
         </div>
     </div>
@@ -438,8 +567,6 @@
                 // Load entries
                 console.log('📋 Loading entries...');
                 await loadEntries();
-                console.log('📧 Loading newsletter...');
-                await loadNewsletter();
                 console.log('👥 Loading guests...');
                 await loadGuests();
                 
@@ -480,34 +607,6 @@
             }
         }
         
-        async function loadNewsletter() {
-            try {
-                const newsletterResponse = await fetch('/api/newsletter-list');
-                const newsletters = await newsletterResponse.json();
-                
-                const newsletterHtml = newsletters.length > 0 
-                    ? newsletters.map(entry => `
-                        <div class="entry">
-                            <div class="entry-info">
-                                <h4>${entry.email}</h4>
-                                <div style="opacity: 0.7; font-size: 0.9rem;">${entry.phone}</div>
-                            </div>
-                            <div class="entry-details">
-                                <div class="timestamp">
-                                    ${new Date(entry.timestamp).toLocaleString('he-IL')}
-                                </div>
-                            </div>
-                        </div>
-                    `).join('')
-                    : '<div style="text-align: center; padding: 40px; opacity: 0.6;">📧 אין הרשמות לניוזלטר עדיין</div>';
-                
-                document.getElementById('newsletter').innerHTML = newsletterHtml;
-                
-            } catch (error) {
-                document.getElementById('newsletter').innerHTML = '<div class="loading">❌ שגיאה בטעינת ניוזלטר</div>';
-            }
-        }
-        
         async function loadGuests() {
             const section = document.getElementById('guests-section');
             try {
@@ -528,46 +627,44 @@
         
         function displayGuests(guests) {
             const section = document.getElementById('guests-section');
-            const tableWrapper = document.createElement('div');
-            tableWrapper.style.overflowX = 'auto';
-            tableWrapper.style.WebkitOverflowScrolling = 'touch';
-            tableWrapper.style.marginTop = '10px';
             
+            // Create table directly without wrapper for better sticky support
             const table = document.createElement('table');
             table.style.width = '100%';
             table.style.background = 'rgba(255,255,255,0.05)';
             table.style.borderRadius = '10px';
-            table.style.minWidth = '400px';
             table.style.fontSize = '0.85rem';
+            table.style.borderCollapse = 'separate';
+            table.style.borderSpacing = '0';
+            table.style.tableLayout = 'fixed'; // Added for better column control
             
             const isMobile = window.innerWidth <= 768;
             
             table.innerHTML = `
-                <thead>
-                    <tr style="background:#222;color:#FFD700;">
-                        <th style="padding:${isMobile ? '4px' : '8px'}; font-size: ${isMobile ? '0.8rem' : '0.9rem'};">שם</th>
-                        <th style="padding:${isMobile ? '4px' : '8px'}; font-size: ${isMobile ? '0.8rem' : '0.9rem'};">טלפון</th>
-                        <th style="padding:${isMobile ? '4px' : '8px'}; font-size: ${isMobile ? '0.8rem' : '0.9rem'};">כרטיסים</th>
-                        <th style="padding:${isMobile ? '4px' : '8px'}; font-size: ${isMobile ? '0.8rem' : '0.9rem'};">אומת?</th>
-                        <th style="padding:${isMobile ? '4px' : '8px'}; font-size: ${isMobile ? '0.8rem' : '0.9rem'};">קוד</th>
+                <thead style="position: sticky; top: 0; z-index: 10;">
+                    <tr style="background:#000;color:#FFD700;">
+                        <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: right; width: 30%;">שם</th>
+                        <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: center; width: 25%;">טלפון</th>
+                        <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: center; width: 15%;">קוד</th>
+                        <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: center; width: 15%;">אושר</th>
+                        <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: center; width: 15%;">נכנס</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${guests.map((g, index) => `
-                        <tr class="guest-row" style="text-align:center;" onclick='showGuestDetails(${JSON.stringify(g).replace(/'/g, "&#39;")})'>
-                            <td style="padding:${isMobile ? '4px' : '8px'}; font-size: ${isMobile ? '0.75rem' : '0.85rem'};">${g.name}</td>
-                            <td style="padding:${isMobile ? '4px' : '8px'}; direction: ltr; font-size: ${isMobile ? '0.75rem' : '0.85rem'};">${g.realPhone || g.phone}</td>
-                            <td style="padding:${isMobile ? '4px' : '8px'}; direction: ltr; font-size: ${isMobile ? '0.75rem' : '0.85rem'};">${g.tickets}</td>
-                            <td style="padding:${isMobile ? '4px' : '8px'}; font-size: ${isMobile ? '0.75rem' : '0.85rem'};">${g.validated ? '✅' : '❌'}</td>
-                            <td style="padding:${isMobile ? '4px' : '8px'}; font-size: ${isMobile ? '0.65rem' : '0.75rem'}; font-family: monospace; direction: ltr;">${g.uniqueCode || '-'}</td>
+                        <tr class="guest-row" style="cursor: pointer; ${index % 2 === 0 ? 'background: rgba(255,255,255,0.02);' : ''}" onclick='showGuestDetails(${JSON.stringify(g).replace(/'/g, "&#39;")})'>
+                            <td style="padding:${isMobile ? '14px 8px' : '14px'}; font-size: ${isMobile ? '1rem' : '0.9rem'}; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.1);">${g.name}</td>
+                            <td style="padding:${isMobile ? '14px 8px' : '14px'}; direction: ltr; font-size: ${isMobile ? '1rem' : '0.9rem'}; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">${g.realPhone || g.phone}</td>
+                            <td style="padding:${isMobile ? '14px 8px' : '14px'}; font-size: ${isMobile ? '1rem' : '0.85rem'}; font-family: monospace; direction: ltr; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); color: #FFD700; font-weight: bold;">${g.uniqueCode || '-'}</td>
+                            <td style="padding:${isMobile ? '14px 8px' : '14px'}; font-size: ${isMobile ? '1rem' : '0.9rem'}; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">${g.validated ? '<span style="color: #4CAF50;">✓</span>' : '<span style="color: #999;">-</span>'}</td>
+                            <td style="padding:${isMobile ? '14px 8px' : '14px'}; font-size: ${isMobile ? '1rem' : '0.9rem'}; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">${g.entered ? '<span style="color: #4CAF50;">✓</span>' : '<span style="color: #999;">-</span>'}</td>
                         </tr>
                     `).join('')}
                 </tbody>
             `;
             
             section.innerHTML = '';
-            tableWrapper.appendChild(table);
-            section.appendChild(tableWrapper);
+            section.appendChild(table);
             
             // Update guest count
             const countInfo = document.createElement('div');
@@ -712,6 +809,11 @@
                 if (e.target === modal) closeModal();
             };
             
+            // Determine status texts and colors
+            const phoneValidatedText = guest.validated ? `✅ כן (${new Date(guest.phoneValidationTimestamp).toLocaleString('he-IL')})` : '❌ לא';
+            const entryStatusText = guest.entered ? `✅ כן (${new Date(guest.entryTimestamp).toLocaleString('he-IL')})` : '❌ לא';
+            const entryValidatedByText = guest.enteredBy || 'טרם נכנס';
+
             modal.innerHTML = `
                 <div class="modal-content">
                     <button class="modal-close" onclick="closeModal()">×</button>
@@ -721,33 +823,33 @@
                         <div class="guest-detail-label">טלפון</div>
                         <div class="guest-detail-value">${guest.realPhone || guest.phone}</div>
                     </div>
-                    
+
                     <div class="guest-detail">
-                        <div class="guest-detail-label">כרטיסים</div>
+                        <div class="guest-detail-label">מספר כרטיסים</div>
                         <div class="guest-detail-value">${guest.tickets}</div>
                     </div>
                     
                     <div class="guest-detail">
-                        <div class="guest-detail-label">סטטוס</div>
-                        <div class="guest-detail-value">${guest.validated ? '✅ אומת' : '❌ לא אומת'}</div>
+                        <div class="guest-detail-label">אימות טלפוני הושלם?</div>
+                        <div class="guest-detail-value">${phoneValidatedText}</div>
                     </div>
-                    
-                    ${guest.uniqueCode ? `
-                        <div class="guest-detail">
-                            <div class="guest-detail-label">קוד אישי</div>
-                            <div class="guest-detail-value" style="font-family: monospace; font-size: 1.2rem; font-weight: bold; color: #FFD700; letter-spacing: 2px;">${guest.uniqueCode}</div>
-                        </div>
-                    ` : ''}
-                    
+
                     ${guest.validated ? `
                         <div class="guest-detail">
-                            <div class="guest-detail-label">אומת על ידי</div>
-                            <div class="guest-detail-value">${guest.validatedBy || 'לא ידוע'}</div>
+                            <div class="guest-detail-label">קוד אימות</div>
+                            <div class="guest-detail-value" style="font-family: monospace; font-size: 1.3rem; font-weight: bold; color: #FFD700; letter-spacing: 2px; direction: ltr;">${guest.uniqueCode || '-'}</div>
                         </div>
-                        
+                    ` : ''}
+
+                    <div class="guest-detail">
+                        <div class="guest-detail-label">סטטוס כניסה למסיבה</div>
+                        <div class="guest-detail-value">${entryStatusText}</div>
+                    </div>
+
+                    ${guest.entered ? `
                         <div class="guest-detail">
-                            <div class="guest-detail-label">זמן אימות</div>
-                            <div class="guest-detail-value">${new Date(guest.validatedAt).toLocaleString('he-IL')}</div>
+                            <div class="guest-detail-label">אומת כניסה על ידי</div>
+                            <div class="guest-detail-value">${entryValidatedByText}</div>
                         </div>
                     ` : ''}
                 </div>
@@ -759,6 +861,58 @@
         function closeModal() {
             const modal = document.querySelector('.modal-overlay');
             if (modal) modal.remove();
+        }
+        
+        async function validateByCode() {
+            const codeInput = document.getElementById('validation-code-input');
+            const code = codeInput.value.trim();
+            const statusEl = document.getElementById('code-validation-status');
+
+            statusEl.textContent = ''; // Clear previous message
+
+            if (!code) {
+                statusEl.textContent = 'נא להזין קוד.';
+                statusEl.style.color = 'red';
+                return;
+            }
+
+            // Basic check if it's a number, though type="number" helps
+            if (isNaN(parseInt(code))) {
+                statusEl.textContent = 'הקוד חייב להיות מספר.';
+                statusEl.style.color = 'red';
+                return;
+            }
+
+            statusEl.textContent = 'מאמת קוד...';
+            statusEl.style.color = '#FFD700'; // Yellow for processing
+
+            try {
+                const response = await fetch('/api/validate-code', { // Endpoint for code validation
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ code: code }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    statusEl.textContent = `קוד אומת בהצלחה עבור: ${result.guestName || 'אורח'}. ${result.ticketsValidated || ''} כרטיס(ים) נוצלו.`;
+                    statusEl.style.color = 'lightgreen';
+                    codeInput.value = ''; // Clear input
+                    // Scroll to top to see messages if page is long
+                    // window.scrollTo({ top: 0, behavior: 'smooth' });
+                    await loadData(); // Reload all data (stats, entries, guests)
+                } else {
+                    statusEl.textContent = result.message || 'קוד לא תקין, לא קיים או שכבר נוצל.';
+                    statusEl.style.color = 'red';
+                }
+            } catch (error) {
+                console.error('Error validating code:', error);
+                statusEl.textContent = 'שגיאה בתקשורת עם השרת.';
+                statusEl.style.color = 'red';
+            }
         }
     </script>
 </body>

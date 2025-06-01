@@ -1,5 +1,5 @@
 // רשימת אורחים - נוצר אוטומטית מקובץ Paybox
-// תאריך עדכון: 29-05-2025
+// תאריך עדכון: 2025-06-01
 
 // מבנה נתונים אופטימלי לבדיקה מהירה לפי מספר טלפון
 const guestsByPhone = {
@@ -18,8 +18,8 @@ const guestsByPhone = {
     '0523864491': { name: 'Michal Shamir', tickets: 1 },
     '0545470222': { name: 'נתנאל מרדכי', tickets: 1 },
     '0508549698': { name: 'שרון רוזנפלד', tickets: 1 },
-    '0523528219': { name: 'Israel Sachartov', tickets: 1 },
-    '0526768992': { name: 'Amit Cohen', tickets: 1 },
+    '0523528219': { name: 'Israel Sachartov', tickets: 2 },
+    '0502895804': { name: 'שחף אלבז', tickets: 1 },
     '0528570670': { name: 'לירון בצלאל', tickets: 2 },
     '0524529191': { name: 'שני קלר', tickets: 1 },
     '0523314932': { name: 'מאי חגי', tickets: 1 },
@@ -35,7 +35,6 @@ const guestsByPhone = {
     '0505367742': { name: 'Karin Gabay', tickets: 1 },
     '0525610865': { name: 'David Nesimi', tickets: 2 },
     '0503313852': { name: 'נתן מור', tickets: 2 },
-    '0544491343': { name: 'נתן מור', tickets: 0 }, // Had refund
     '0508350533': { name: 'Shirel Lev', tickets: 1 },
     '0542002210': { name: 'נועה איזקוב', tickets: 1 },
     '0547799970': { name: 'יובל חמו', tickets: 2 },
@@ -76,7 +75,64 @@ const guestsByPhone = {
     '0524722494': { name: 'שלומי גרינברג', tickets: 1 },
     '0507430845': { name: 'Tamara Markovich', tickets: 1 },
     '0545793184': { name: 'Yarden Mizrahi', tickets: 1 },
-    '0504333372': { name: 'עדן דוד', tickets: 2 }
+    '0504333372': { name: 'עדן דוד', tickets: 2 },
+    '0544995900': { name: 'Shiri Green', tickets: 1 },
+    '0527222305': { name: 'יונתן לוין', tickets: 1 },
+    '0525844335': { name: 'עידו מוכתר', tickets: 1 },
+    '0526189157': { name: 'Michael Begun', tickets: 2 },
+    '0525361626': { name: 'Rom Shternlib', tickets: 1 },
+    '0523782638': { name: 'קרין יוסף', tickets: 1 },
+    '0546565105': { name: 'Efrat Harel', tickets: 1 },
+    '0509155456': { name: 'שירה מקנזי', tickets: 1 },
+    '0542689747': { name: 'Diana Michalson', tickets: 1 },
+    '0546669054': { name: 'Shahar Abadi', tickets: 1 },
+    '0545631595': { name: 'זהבית רחמיאל אריסון', tickets: 1 },
+    '0544457923': { name: 'Or Malca', tickets: 1 },
+    '0505287221': { name: 'Uri man', tickets: 1 },
+    '0523331061': { name: 'Inbar Binyamin', tickets: 2 },
+    '0544412407': { name: 'שיר שוואלב', tickets: 1 },
+    '0523450404': { name: 'ספיר הלוי', tickets: 1 },
+    '0505335985': { name: 'Smadar Eitan', tickets: 1 },
+    '0523314003': { name: 'עומר הלל', tickets: 1 },
+    '0526308022': { name: 'Elor Siso', tickets: 1 },
+    '0508766708': { name: 'Asaf Levy', tickets: 1 },
+    '0546436618': { name: 'שחר גואטה', tickets: 1 },
+    '0547882924': { name: 'or gerner', tickets: 1 },
+    '0545637916': { name: 'Hatzav Manbar', tickets: 2 },
+    '0587227265': { name: 'מאי שושני', tickets: 1 },
+    '0546262585': { name: 'Natalie Berkowicz', tickets: 1 },
+    '0525270229': { name: 'גל יפרח', tickets: 1 },
+    '0544546873': { name: 'Lior Nunu', tickets: 2 },
+    '0505836586': { name: 'דניאל שומרון', tickets: 1 },
+    '0507314700': { name: 'עדי שרעבן', tickets: 1 },
+    '0547687837': { name: 'Jonathan Buchwald', tickets: 1 },
+    '0542659848': { name: 'גיל מנשרוב', tickets: 1 },
+    '0503650860': { name: 'Doron Meshulam', tickets: 1 },
+    '0528242847': { name: 'גלית הוברמו', tickets: 1 },
+    '0509964155': { name: 'Bracha Zaafran', tickets: 1 },
+    '0544241002': { name: 'מאור יהלומי', tickets: 1 },
+    '0509067666': { name: 'סטפן פיינטוך', tickets: 1 },
+    '0526620061': { name: 'Karin Malka', tickets: 1 },
+    '0543155042': { name: 'ענבר מרקביץ', tickets: 1 },
+    '0543518787': { name: 'Coral Gimelberg', tickets: 1 },
+    '0546814972': { name: 'ענבל הוכנר', tickets: 1 },
+    '0507959055': { name: 'Ofir Olivenbaum', tickets: 1 },
+    '0547636693': { name: 'תמר שנבל', tickets: 1 },
+    '0546223337': { name: 'Liel Smelanski', tickets: 1 },
+    '0544903869': { name: 'נעם טלמור', tickets: 1 },
+    '0524787781': { name: 'einav bezalel', tickets: 1 },
+    '0545336280': { name: 'ענבל אלפיה', tickets: 1 },
+    '0546671883': { name: 'אורטל דיטור', tickets: 1 },
+    '0543328938': { name: 'נוי ארז', tickets: 1 },
+    '0546220735': { name: 'נעה עציון', tickets: 1 },
+    '0542116068': { name: 'לינור מוסקוביץ', tickets: 1 },
+    '0545229997': { name: 'נטע נייגר', tickets: 1 },
+    '0546226817': { name: 'Ayelet Schwartz', tickets: 1 },
+    '0523922020': { name: 'רתם גרמן', tickets: 3 },
+    '0526757442': { name: 'לי סובר', tickets: 1 },
+    '0545678415': { name: 'יעל ליבוביץ', tickets: 1 },
+    '0506666623': { name: 'יעל פרל', tickets: 1 },
+    '0523877538': { name: 'גילי ירדני', tickets: 1 }
 };
 
 // Export for Node.js
@@ -84,4 +140,4 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = { guestsByPhone };
 }
 
-// סה"כ: 75 אורחים ייחודיים 
+// סה"כ: 138 אורחים ייחודיים, 161 כרטיסים 

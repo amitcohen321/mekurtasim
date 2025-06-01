@@ -13,8 +13,6 @@ const { guestsByPhone } = require('./guests.js');
 
 // In-memory cache for validated entries
 const validatedEntries = new Map();
-// In-memory array for newsletter signups
-const newsletterList = [];
 
 // Function to generate unique 4-digit code
 function generateUniqueCode() {
@@ -103,13 +101,16 @@ app.post('/api/validate', (req, res) => {
     const guest = guestsByPhone[cleanedPhone];
     
     if (guest && guest.tickets > 0) {
-        // Mark as validated
+        // Mark as validated (phone validation)
         validatedEntries.set(cleanedPhone, {
             name: guest.name,
             tickets: guest.tickets,
-            timestamp: new Date().toISOString(),
+            phoneValidationTimestamp: new Date().toISOString(), // Renamed for clarity
             ip: req.ip,
-            uniqueCode: generateUniqueCode()
+            uniqueCode: generateUniqueCode(),
+            entered: false,                 // Tracks if guest has actually entered
+            entryTimestamp: null,           // Timestamp for actual entry
+            enteredBy: null                 // Method/admin who confirmed entry
         });
         
         return res.json({
@@ -154,51 +155,22 @@ app.get('/api/validated', (req, res) => {
     res.json(entries);
 });
 
-// API endpoint to get newsletter signups (for admin)
-app.get('/api/newsletter-list', (req, res) => {
-    const newsletters = newsletterList.map(entry => ({
-        ...entry,
-        phone: entry.phone ? entry.phone.substring(0, 3) + '****' + entry.phone.substring(7) : 'N/A'
-    }));
-    
-    // Sort by timestamp (newest first)
-    newsletters.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-    
-    res.json(newsletters);
-});
-
-// API endpoint for newsletter signup
-app.post('/api/newsletter', (req, res) => {
-    const { email, phone } = req.body;
-    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-        return res.status(400).json({ success: false, message: 'אימייל לא תקין' });
-    }
-    // Prevent duplicate signups
-    if (newsletterList.find(e => e.email.toLowerCase() === email.toLowerCase())) {
-        return res.status(409).json({ success: false, message: 'אימייל זה כבר נרשם' });
-    }
-    newsletterList.push({
-        email,
-        phone,
-        timestamp: new Date().toISOString()
-    });
-    res.json({ success: true });
-});
-
 // API endpoint to get all guests with validation status (for admin)
 app.get('/api/guests', (req, res) => {
     const guests = Object.entries(guestsByPhone).map(([phone, guest]) => {
         const validated = validatedEntries.has(phone);
-        const validation = validated ? validatedEntries.get(phone) : null;
+        const validationData = validated ? validatedEntries.get(phone) : null;
         return {
             phone: phone.substring(0, 3) + '****' + phone.substring(7), // Masked phone
-            realPhone: phone, // For admin use only, can be removed if not needed
+            realPhone: phone, 
             name: guest.name,
             tickets: guest.tickets,
-            validated,
-            validatedAt: validation ? validation.timestamp : null,
-            validatedBy: validation ? validation.name : null,
-            uniqueCode: validation ? validation.uniqueCode : null
+            validated: validated, // True if phone was validated
+            phoneValidationTimestamp: validationData ? validationData.phoneValidationTimestamp : null,
+            uniqueCode: validationData ? validationData.uniqueCode : null,
+            entered: validationData ? validationData.entered : false,
+            entryTimestamp: validationData ? validationData.entryTimestamp : null,
+            enteredBy: validationData ? validationData.enteredBy : null
         };
     });
     // Sort by name
@@ -231,6 +203,50 @@ app.get('/api/health', (req, res) => {
 // Admin page route
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, '../client/admin.html'));
+});
+
+// API endpoint for validating by unique code (admin)
+app.post('/api/validate-code', (req, res) => {
+    const { code } = req.body;
+
+    if (!code) {
+        return res.status(400).json({ success: false, message: 'Code is required.' });
+    }
+
+    let foundEntry = null;
+    let guestPhoneKey = null;
+
+    for (const [phone, entryData] of validatedEntries.entries()) {
+        if (entryData.uniqueCode === code) {
+            foundEntry = entryData;
+            guestPhoneKey = phone;
+            break;
+        }
+    }
+
+    if (foundEntry) {
+        if (foundEntry.entered) {
+            return res.status(400).json({
+                success: false,
+                message: `Code already used. Guest ${foundEntry.name} entered at ${new Date(foundEntry.entryTimestamp).toLocaleString('he-IL')}.`
+            });
+        } else {
+            foundEntry.entered = true;
+            foundEntry.entryTimestamp = new Date().toISOString();
+            foundEntry.enteredBy = 'AdminCodeValidation';
+            
+            validatedEntries.set(guestPhoneKey, foundEntry); // Update the map entry
+
+            return res.json({
+                success: true,
+                guestName: foundEntry.name,
+                ticketsValidated: foundEntry.tickets,
+                message: `Guest ${foundEntry.name} successfully validated for entry.`
+            });
+        }
+    } else {
+        return res.status(404).json({ success: false, message: 'קוד שגוי או לא קיים.' });
+    }
 });
 
 // Start server
