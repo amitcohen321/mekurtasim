@@ -1,5 +1,5 @@
 // הגדרות
-const DOOR_CODE = '2580#';
+const DOOR_CODE = '1909#';
 const API_URL = window.location.origin + '/api';
 
 // DOM Elements
@@ -324,6 +324,11 @@ window.addEventListener('load', () => {
                 // Hide form and show success screen
                 form.classList.add('hidden');
                 againBtn.classList.add('hidden');
+                
+                // Hide phone label
+                if (phoneLabel) {
+                    phoneLabel.classList.add('hidden');
+                }
                 
                 // Show previous success
                 showSuccess(validationData.guest);
