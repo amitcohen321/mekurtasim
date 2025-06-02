@@ -94,7 +94,7 @@ function showFailure() {
         <div style="font-size: 1.1rem; margin-bottom: 8px;">
             ❌ מצטערים, אינך ברשימת האורחים
         </div>
-        <a href="https://wa.me/9728294080?text=שלום, אני לא נמצא ברשימת האורחים למסיבת הגג. האם יש אפשרות להצטרף?" target="_blank" class="paybox-btn" style="background: #81C784; margin-top: 8px; display: block; text-align: center;">
+        <a href="https://wa.me/972544491343?text=שלום, אני לא נמצא ברשימת האורחים למסיבת הגג. האם יש אפשרות להצטרף?" target="_blank" class="paybox-btn" style="background: #81C784; margin-top: 8px; display: block; text-align: center;">
             📲 פנייה למנהל בוואטסאפ
         </a>
     `;
@@ -340,7 +340,7 @@ function showAlreadyValidated(data) {
         <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 16px;">
             אם זו טעות, פנו לצוות בכניסה
         </div>
-        <a href="https://wa.me/9728294080?text=שלום, המספר שלי כבר אומת אבל אני צריך עזרה" target="_blank" class="paybox-btn" style="background: #81C784; margin-top: 12px; display: block; text-align: center;">
+        <a href="https://wa.me/972544491343?text=שלום, המספר שלי כבר אומת אבל אני צריך עזרה" target="_blank" class="paybox-btn" style="background: #81C784; margin-top: 12px; display: block; text-align: center;">
             📲 פנייה למנהל בוואטסאפ
         </a>
     `;
@@ -360,7 +360,7 @@ function showError(message) {
         <div style="font-size: 0.9rem; opacity: 0.9;">
             נסה שוב או פנה לצוות
         </div>
-        <a href="https://wa.me/9728294080?text=שלום, יש לי בעיה טכנית באתר מסיבת הגג" target="_blank" class="paybox-btn" style="background: #81C784; margin-top: 12px; display: block; text-align: center;">
+        <a href="https://wa.me/972544491343?text=שלום, יש לי בעיה טכנית באתר מסיבת הגג" target="_blank" class="paybox-btn" style="background: #81C784; margin-top: 12px; display: block; text-align: center;">
             📲 פנייה למנהל בוואטסאפ
         </a>
     `;

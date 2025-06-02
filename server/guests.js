@@ -149,3 +149,5 @@ const guestsByPhone = {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { guestsByPhone };
 }
+
+// סה"כ: 131 אורחים ייחודיים, 155 כרטיסים

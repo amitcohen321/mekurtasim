@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>מסיבת גג - ניהול כניסות</title>
     
+    <!-- PWA Metadata -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ניהול כניסות">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#FF9C42">
+    <meta name="msapplication-TileColor" content="#FF9C42">
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon-192.png">
+    
     <style>
         * {
             margin: 0;
@@ -607,6 +621,28 @@
     <script>
         let currentStats = null;
         
+        // Safe date formatting function
+        function formatDate(timestamp) {
+            if (!timestamp) return 'לא זמין';
+            
+            try {
+                const date = new Date(timestamp);
+                if (isNaN(date.getTime())) {
+                    return 'תאריך לא תקין';
+                }
+                return date.toLocaleString('he-IL', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (error) {
+                console.error('Error formatting date:', error);
+                return 'שגיאה בתאריך';
+            }
+        }
+        
         async function loadData() {
             console.log('🔍 Starting loadData...');
             try {
@@ -660,17 +696,19 @@
                 const entriesResponse = await fetch('/api/validated');
                 const entries = await entriesResponse.json();
                 
+                console.log('Entries received:', entries); // Debug log
+                
                 const entriesHtml = entries.length > 0 
                     ? entries.map(entry => `
                         <div class="entry">
                             <div class="entry-info">
                                 <h4>${entry.name}</h4>
-                                <div style="opacity: 0.7; font-size: 0.9rem;">${entry.phone}</div>
+                                <div style="opacity: 0.7; font-size: 0.9rem; direction: ltr; text-align: right;">${entry.phone}</div>
                             </div>
                             <div class="entry-details">
                                 <div><span class="badge">${entry.tickets} כרטיסים</span></div>
                                 <div class="timestamp">
-                                    ${new Date(entry.timestamp).toLocaleString('he-IL')}
+                                    ${formatDate(entry.timestamp || entry.entryTimestamp || entry.validationTimestamp || Date.now())}
                                 </div>
                             </div>
                         </div>
@@ -680,6 +718,7 @@
                 document.getElementById('entries').innerHTML = entriesHtml;
                 
             } catch (error) {
+                console.error('Error loading entries:', error);
                 document.getElementById('entries').innerHTML = '<div class="loading">❌ שגיאה בטעינת כניסות</div>';
             }
         }
@@ -897,8 +936,8 @@
             };
             
             // Determine status texts and colors
-            const phoneValidatedText = guest.validated ? `✅ כן (${new Date(guest.phoneValidationTimestamp).toLocaleString('he-IL')})` : '❌ לא';
-            const entryStatusText = guest.entered ? `✅ כן (${new Date(guest.entryTimestamp).toLocaleString('he-IL')})` : '❌ לא';
+            const phoneValidatedText = guest.validated ? `✅ כן (${formatDate(guest.phoneValidationTimestamp)})` : '❌ לא';
+            const entryStatusText = guest.entered ? `✅ כן (${formatDate(guest.entryTimestamp)})` : '❌ לא';
             const entryValidatedByText = guest.enteredBy || 'טרם נכנס';
 
             modal.innerHTML = `
