@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Background gradient (sunset sky) -->
+  <defs>
+    <radialGradient id="sunsetGradient" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#FF9C42;stop-opacity:1" />
+      <stop offset="60%" style="stop-color:#FF7A00;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B7FB8;stop-opacity:1" />
+    </radialGradient>
+    <linearGradient id="buildingGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2C2C2C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1A1A1A;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:0.8" />
+      <stop offset="70%" style="stop-color:#FF9C42;stop-opacity:0.4" />
+      <stop offset="100%" style="stop-color:#FF7A00;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Sky background -->
+  <rect width="512" height="512" fill="url(#sunsetGradient)" />
+  
+  <!-- Sun -->
+  <circle cx="400" cy="120" r="60" fill="#FFD700" opacity="0.9"/>
+  <circle cx="400" cy="120" r="80" fill="url(#sunGlow)" />
+  
+  <!-- Building silhouettes -->
+  <rect x="0" y="350" width="80" height="162" fill="url(#buildingGradient)" />
+  <rect x="80" y="320" width="60" height="192" fill="url(#buildingGradient)" />
+  <rect x="140" y="380" width="70" height="132" fill="url(#buildingGradient)" />
+  <rect x="210" y="300" width="90" height="212" fill="url(#buildingGradient)" />
+  <rect x="300" y="360" width="65" height="152" fill="url(#buildingGradient)" />
+  <rect x="365" y="340" width="75" height="172" fill="url(#buildingGradient)" />
+  <rect x="440" y="380" width="72" height="132" fill="url(#buildingGradient)" />
+  
+  <!-- Main rooftop (highlighted) -->
+  <rect x="180" y="200" width="150" height="312" fill="url(#buildingGradient)" />
+  <rect x="180" y="200" width="150" height="20" fill="#FF9C42" opacity="0.7" />
+  
+  <!-- Windows -->
+  <rect x="190" y="220" width="12" height="12" fill="#FFD700" opacity="0.6" />
+  <rect x="210" y="220" width="12" height="12" fill="#FFD700" opacity="0.6" />
+  <rect x="250" y="220" width="12" height="12" fill="#FFD700" opacity="0.6" />
+  <rect x="290" y="220" width="12" height="12" fill="#FFD700" opacity="0.6" />
+  <rect x="310" y="220" width="12" height="12" fill="#FFD700" opacity="0.6" />
+  
+  <rect x="190" y="250" width="12" height="12" fill="#FFD700" opacity="0.4" />
+  <rect x="230" y="250" width="12" height="12" fill="#FFD700" opacity="0.4" />
+  <rect x="270" y="250" width="12" height="12" fill="#FFD700" opacity="0.4" />
+  <rect x="310" y="250" width="12" height="12" fill="#FFD700" opacity="0.4" />
+  
+  <!-- Party lights on rooftop -->
+  <circle cx="200" cy="190" r="4" fill="#FFD700">
+    <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite" />
+  </circle>
+  <circle cx="220" cy="185" r="4" fill="#FF9C42">
+    <animate attributeName="opacity" values="1;0.5;1" dur="1.8s" repeatCount="indefinite" />
+  </circle>
+  <circle cx="240" cy="190" r="4" fill="#FFD700">
+    <animate attributeName="opacity" values="0.5;1;0.5" dur="2.2s" repeatCount="indefinite" />
+  </circle>
+  <circle cx="260" cy="185" r="4" fill="#FF9C42">
+    <animate attributeName="opacity" values="1;0.5;1" dur="1.6s" repeatCount="indefinite" />
+  </circle>
+  <circle cx="280" cy="190" r="4" fill="#FFD700">
+    <animate attributeName="opacity" values="0.5;1;0.5" dur="2.4s" repeatCount="indefinite" />
+  </circle>
+  <circle cx="300" cy="185" r="4" fill="#FF9C42">
+    <animate attributeName="opacity" values="1;0.5;1" dur="1.4s" repeatCount="indefinite" />
+  </circle>
+  <circle cx="320" cy="190" r="4" fill="#FFD700">
+    <animate attributeName="opacity" values="0.5;1;0.5" dur="2.6s" repeatCount="indefinite" />
+  </circle>
+  
+  <!-- String connecting lights -->
+  <line x1="200" y1="190" x2="320" y2="190" stroke="#333" stroke-width="1" opacity="0.3" />
+  
+  <!-- Party emoji/elements -->
+  <text x="256" y="170" font-family="system-ui" font-size="20" text-anchor="middle" fill="#FFD700">🎉</text>
+  <text x="230" y="160" font-family="system-ui" font-size="16" text-anchor="middle" fill="#FFD700">🌅</text>
+  <text x="280" y="160" font-family="system-ui" font-size="16" text-anchor="middle" fill="#FFD700">🎵</text>
+</svg> 

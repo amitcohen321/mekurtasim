@@ -14,19 +14,19 @@ const { guestsByPhone } = require('./guests.js');
 // In-memory cache for validated entries
 const validatedEntries = new Map();
 
-// Function to generate unique 4-digit code
+// Function to generate unique 5-digit code
 function generateUniqueCode() {
     let code;
     let attempts = 0;
     
     do {
-        // Generate 4-digit code (1000-9999)
-        code = Math.floor(Math.random() * 9000 + 1000).toString();
+        // Generate 5-digit code (10000-99999)
+        code = Math.floor(Math.random() * 90000 + 10000).toString();
         attempts++;
         // Prevent infinite loop
         if (attempts > 1000) {
-            // Fallback: use last 4 digits of timestamp
-            code = Date.now().toString().slice(-4);
+            // Fallback: use last 5 digits of timestamp
+            code = Date.now().toString().slice(-5);
             break;
         }
     } while (Array.from(validatedEntries.values()).some(entry => entry.uniqueCode === code));
@@ -118,7 +118,8 @@ app.post('/api/validate', (req, res) => {
             guest: {
                 name: guest.name,
                 tickets: guest.tickets,
-                uniqueCode: validatedEntries.get(cleanedPhone).uniqueCode
+                uniqueCode: validatedEntries.get(cleanedPhone).uniqueCode,
+                displayCode: `R${validatedEntries.get(cleanedPhone).uniqueCode}`
             }
         });
     }

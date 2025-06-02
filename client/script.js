@@ -49,26 +49,26 @@ function showSuccess(guest) {
     resultDiv.className = 'result success';
     resultDiv.innerHTML = `
         <div class="welcome-name" style="text-align: center;">✨ ברוכים הבאים ${guest.name}! ✨</div>
-        <div class="entrance-code-section" style="background: rgba(255,255,255,0.2); padding: 16px; margin: 16px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.4); text-align: center;">
-            <div style="font-size: 1.1rem; margin-bottom: 8px; font-weight: bold;">🚪 קוד כניסה לדלת:</div>
-            <div class="door-code" style="font-size: 2rem; font-weight: bold; letter-spacing: 4px; font-family: 'Courier New', monospace; color: #FFD700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">${DOOR_CODE}</div>
-        </div>
         <div class="tickets-info">
             🎟️ רשומים על שמך ${guest.tickets} כרטיסים
         </div>
         ${guest.uniqueCode ? `
         <div class="unique-code-section" style="background: rgba(255,255,255,0.15); padding: 20px; margin: 20px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.3);">
             <div style="font-size: 1.1rem; margin-bottom: 8px; font-weight: bold;">🎫 הקוד האישי שלך:</div>
-            <div class="unique-code" style="font-size: 2.5rem; font-weight: bold; letter-spacing: 6px; font-family: 'Courier New', monospace; color: #FFD700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); text-align: center; margin: 12px 0;">${guest.uniqueCode}</div>
+            <div class="unique-code" style="font-size: 2rem; font-weight: bold; letter-spacing: 4px; font-family: 'Courier New', monospace; color: #FFD700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); text-align: center; margin: 12px 0;">R-${guest.uniqueCode}</div>
             <div style="font-size: 0.9rem; color: rgba(255,255,255,0.8); margin-top: 8px; line-height: 1.4;">
                 <strong>הראו קוד זה לצוות בכניסה</strong><br>
                 הקוד חד פעמי ואישי עבורכם
             </div>
         </div>
         ` : ''}
+        <div class="entrance-code-section" style="background: rgba(255,255,255,0.2); padding: 16px; margin: 16px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.4); text-align: center;">
+            <div style="font-size: 1.1rem; margin-bottom: 8px; font-weight: bold;">🚪 קוד כניסה לדלת:</div>
+            <div class="door-code" style="font-size: 2rem; font-weight: bold; letter-spacing: 4px; font-family: 'Courier New', monospace; color: #FFD700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">${DOOR_CODE}</div>
+        </div>
         <div class="welcome-text">
         </div>
-        <div class="entry-instructions">
+        <div class="entry-instructions" style="text-align: center;">
             אנחנו כבר מחכים לכם בפנים! 🎉
         </div>
     `;
@@ -158,7 +158,6 @@ function populateTicketOptions(guest) {
 function resetForm() {
     form.classList.remove('hidden');
     resultDiv.classList.add('hidden');
-    againBtn.classList.add('hidden');
     phoneInput.value = '';
     currentGuest = null;
     phoneInput.focus();
@@ -202,7 +201,6 @@ form.addEventListener('submit', async (e) => {
     // Hide form and show loader
     form.classList.add('hidden');
     showLoader();
-    againBtn.classList.add('hidden');
     
     try {
         // Call API
@@ -233,12 +231,7 @@ form.addEventListener('submit', async (e) => {
         console.error('Validation error:', error);
         showError('שגיאה בחיבור לשרת');
     }
-    
-    againBtn.classList.remove('hidden');
 });
-
-// טיפול בכפתור "בדיקת מספר נוסף"
-againBtn.addEventListener('click', resetForm);
 
 // Auto-format phone number as user types
 phoneInput.addEventListener('input', (e) => {
@@ -269,7 +262,6 @@ window.addEventListener('load', () => {
             if (validationData.validated && validationData.guest) {
                 // Hide form and show success screen
                 form.classList.add('hidden');
-                againBtn.classList.add('hidden');
                 
                 // Hide phone label
                 if (phoneLabel) {
@@ -278,9 +270,6 @@ window.addEventListener('load', () => {
                 
                 // Show previous success
                 showSuccess(validationData.guest);
-                
-                // Hide the "again" button since they can't search again
-                againBtn.style.display = 'none';
                 
                 // Show a different message indicating they're already validated
                 const alreadyValidatedMsg = document.createElement('div');
@@ -342,7 +331,7 @@ function showAlreadyValidated(data) {
         ${data.uniqueCode ? `
         <div class="unique-code-section" style="background: rgba(255,255,255,0.1); padding: 16px; margin: 16px 0; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);">
             <div style="font-size: 1rem; margin-bottom: 6px; font-weight: bold;">🎫 הקוד האישי שלך:</div>
-            <div class="unique-code" style="font-size: 1.5rem; font-weight: bold; letter-spacing: 3px; font-family: 'Courier New', monospace; color: #FFD700; text-align: center; margin: 8px 0;">${data.uniqueCode}</div>
+            <div class="unique-code" style="font-size: 1.5rem; font-weight: bold; letter-spacing: 3px; font-family: 'Courier New', monospace; color: #FFD700; text-align: center; margin: 8px 0;">R-${data.uniqueCode}</div>
             <div style="font-size: 0.8rem; color: rgba(255,255,255,0.7); margin-top: 6px;">
                 הראו קוד זה לצוות בכניסה
             </div>

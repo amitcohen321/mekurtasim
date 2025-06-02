@@ -1,5 +1,5 @@
 // רשימת אורחים - נוצר אוטומטית מקובץ Paybox
-// תאריך עדכון: 2025-06-01
+// תאריך עדכון: 2025-01-20
 
 // מבנה נתונים אופטימלי לבדיקה מהירה לפי מספר טלפון
 const guestsByPhone = {
@@ -114,7 +114,7 @@ const guestsByPhone = {
     '0509067666': { name: 'סטפן פיינטוך', tickets: 1 },
     '0526620061': { name: 'Karin Malka', tickets: 1 },
     '0543155042': { name: 'ענבר מרקביץ', tickets: 1 },
-    '0543518787': { name: 'Coral Gimelberg', tickets: 1 },
+    '0524515873': { name: 'לירון טליתמן', tickets: 1 },
     '0546814972': { name: 'ענבל הוכנר', tickets: 1 },
     '0507959055': { name: 'Ofir Olivenbaum', tickets: 1 },
     '0547636693': { name: 'תמר שנבל', tickets: 1 },
@@ -132,12 +132,20 @@ const guestsByPhone = {
     '0526757442': { name: 'לי סובר', tickets: 1 },
     '0545678415': { name: 'יעל ליבוביץ', tickets: 1 },
     '0506666623': { name: 'יעל פרל', tickets: 1 },
-    '0523877538': { name: 'גילי ירדני', tickets: 1 }
+    '0523877538': { name: 'גילי ירדני', tickets: 1 },
+    '0507560356': { name: 'אור וילדר', tickets: 1 },
+    '0546606804': { name: 'גלעד זיסמן', tickets: 1 },
+    '0547564333': { name: 'גיל אלוני', tickets: 1 },
+    '0548795270': { name: 'רויטל אילייב', tickets: 1 },
+    '0506551730': { name: 'ליאן אפרתי', tickets: 1 },
+    '0546328292': { name: 'רוני אדלר', tickets: 1 },
+    '0528028638': { name: 'רגב', tickets: 2 },
+    '0508445593': { name: 'אלי לגזיאל', tickets: 1 },
+    '0542322843': { name: 'ספיר מרקוביץ ויובל ורטלסקי', tickets: 1 },
+    '0505244805': { name: 'מיכל הלמן ועומרי דדון', tickets: 1 }
 };
 
 // Export for Node.js
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { guestsByPhone };
 }
-
-// סה"כ: 138 אורחים ייחודיים, 161 כרטיסים 
