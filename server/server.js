@@ -184,7 +184,7 @@ app.get('/api/guests', (req, res) => {
 
 // API endpoint to add a new guest (for admin)
 app.post('/api/guests', (req, res) => {
-    const { name, phone, tickets } = req.body;
+    const { name, phone, tickets, newsletter } = req.body;
     if (!name || !phone || typeof tickets !== 'number') {
         return res.status(400).json({ success: false, message: 'Missing required fields' });
     }
@@ -196,7 +196,23 @@ app.post('/api/guests', (req, res) => {
         return res.status(409).json({ success: false, message: 'Guest with this phone already exists' });
     }
     guestsByPhone[cleanedPhone] = { name, tickets };
-    res.json({ success: true, guest: { name, phone: cleanedPhone, tickets } });
+    
+    // If newsletter is true, add to validated entries with newsletter preference
+    if (newsletter) {
+        validatedEntries.set(cleanedPhone, {
+            name: name,
+            tickets: tickets,
+            phoneValidationTimestamp: new Date().toISOString(),
+            ip: 'admin-added',
+            uniqueToken: generateUniqueToken(),
+            entered: false,
+            entryTimestamp: null,
+            enteredBy: null,
+            newsletter: true
+        });
+    }
+    
+    res.json({ success: true, guest: { name, phone: cleanedPhone, tickets, newsletter: newsletter || false } });
 });
 
 // API endpoint to get newsletter subscribers (for admin)
