@@ -52,13 +52,15 @@ function showSuccess(guest) {
         <div class="tickets-info">
             🎟️ רשומים על שמך ${guest.tickets} כרטיסים
         </div>
-        ${guest.uniqueCode ? `
-        <div class="unique-code-section" style="background: rgba(255,255,255,0.15); padding: 20px; margin: 20px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.3);">
-            <div style="font-size: 1.1rem; margin-bottom: 8px; font-weight: bold;">🎫 הקוד האישי שלך:</div>
-            <div class="unique-code" style="font-size: 2rem; font-weight: bold; letter-spacing: 4px; font-family: 'Courier New', monospace; color: #FFD700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); text-align: center; margin: 12px 0;">R-${guest.uniqueCode}</div>
+        ${guest.uniqueToken ? `
+        <div class="qr-code-section" style="background: rgba(255,255,255,0.15); padding: 20px; margin: 20px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.3); text-align: center;">
+            <div style="font-size: 1.1rem; margin-bottom: 12px; font-weight: bold;">🎫 קוד QR לכניסה:</div>
+            <div style="background: white; padding: 15px; border-radius: 8px; display: inline-block; margin: 12px 0;">
+                <canvas id="qr-canvas" style="display: block;"></canvas>
+            </div>
             <div style="font-size: 0.9rem; color: rgba(255,255,255,0.8); margin-top: 8px; line-height: 1.4;">
                 <strong>הראו קוד זה לצוות בכניסה</strong><br>
-                הקוד חד פעמי ואישי עבורכם
+                או לחצו עליו לפתיחת הלינק
             </div>
         </div>
         ` : ''}
@@ -85,6 +87,62 @@ function showSuccess(guest) {
     }));
     
     logSuccessfulEntry(guest);
+    
+    // Generate QR code if token exists
+    if (guest.uniqueToken && guest.validationUrl) {
+        console.log('Generating QR code for URL:', guest.validationUrl);
+        
+        // Function to generate QR code
+        const generateQR = () => {
+            const canvas = document.getElementById('qr-canvas');
+            console.log('Canvas element:', canvas);
+            console.log('QRCode library available:', !!window.QRCode);
+            
+            if (canvas && window.QRCode) {
+                console.log('Starting QR generation...');
+                QRCode.toCanvas(canvas, guest.validationUrl, {
+                    width: 200,
+                    margin: 2,
+                    color: {
+                        dark: '#000000',
+                        light: '#FFFFFF'
+                    }
+                }, function (error) {
+                    if (error) {
+                        console.error('QR Code generation failed:', error);
+                        canvas.parentElement.innerHTML = '<div style="color: #ff5252; padding: 20px; text-align: center;">שגיאה ביצירת QR קוד<br><small>' + error.message + '</small></div>';
+                    } else {
+                        console.log('QR Code generated successfully');
+                        canvas.style.cursor = 'pointer';
+                        canvas.onclick = () => {
+                            window.open(guest.validationUrl, '_blank');
+                        };
+                    }
+                });
+            } else if (canvas) {
+                console.log('QRCode library not ready, waiting...');
+                // Wait for library to load
+                let attempts = 0;
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    console.log(`Attempt ${attempts}: QRCode available?`, !!window.QRCode);
+                    if (window.QRCode) {
+                        clearInterval(checkInterval);
+                        generateQR();
+                    } else if (attempts > 20) { // Stop after 10 seconds
+                        clearInterval(checkInterval);
+                        console.error('QRCode library failed to load after waiting');
+                        canvas.parentElement.innerHTML = '<div style="color: #ff5252; padding: 20px; text-align: center;">QR library failed to load</div>';
+                    }
+                }, 500);
+            }
+        };
+        
+        // Wait a bit for DOM to be ready, then try to generate
+        setTimeout(generateQR, 100);
+    } else {
+        console.log('Missing token or validation URL:', { token: guest.uniqueToken, url: guest.validationUrl });
+    }
 }
 
 // הצג תוצאת כישלון
@@ -213,9 +271,11 @@ form.addEventListener('submit', async (e) => {
         });
         
         const data = await response.json();
+        console.log('Server response:', data);
         
         if (response.ok && data.success) {
             // Guest found and validated
+            console.log('Guest data received:', data.guest);
             showSuccess(data.guest);
         } else if (response.status === 403) {
             // Already validated
@@ -328,10 +388,12 @@ function showAlreadyValidated(data) {
         <div style="font-size: 0.9rem; opacity: 0.9;">
             ${data.validatedBy} כבר אומת ב-${new Date(data.validatedAt).toLocaleString('he-IL')}
         </div>
-        ${data.uniqueCode ? `
-        <div class="unique-code-section" style="background: rgba(255,255,255,0.1); padding: 16px; margin: 16px 0; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);">
-            <div style="font-size: 1rem; margin-bottom: 6px; font-weight: bold;">🎫 הקוד האישי שלך:</div>
-            <div class="unique-code" style="font-size: 1.5rem; font-weight: bold; letter-spacing: 3px; font-family: 'Courier New', monospace; color: #FFD700; text-align: center; margin: 8px 0;">R-${data.uniqueCode}</div>
+        ${data.uniqueToken ? `
+        <div class="qr-code-section" style="background: rgba(255,255,255,0.1); padding: 16px; margin: 16px 0; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); text-align: center;">
+            <div style="font-size: 1rem; margin-bottom: 6px; font-weight: bold;">🎫 קוד QR לכניסה:</div>
+            <div style="background: white; padding: 10px; border-radius: 6px; display: inline-block; margin: 8px 0;">
+                <canvas id="qr-canvas-validated" style="display: block;"></canvas>
+            </div>
             <div style="font-size: 0.8rem; color: rgba(255,255,255,0.7); margin-top: 6px;">
                 הראו קוד זה לצוות בכניסה
             </div>
@@ -347,6 +409,34 @@ function showAlreadyValidated(data) {
     
     if (navigator.vibrate) {
         navigator.vibrate([200, 100, 200]);
+    }
+    
+    // Generate QR code for already validated guests
+    if (data.uniqueToken) {
+        setTimeout(() => {
+            const canvas = document.getElementById('qr-canvas-validated');
+            if (canvas && window.QRCode) {
+                const validationUrl = `${window.location.origin}/admin/validate/${data.uniqueToken}`;
+                QRCode.toCanvas(canvas, validationUrl, {
+                    width: 150,
+                    margin: 2,
+                    color: {
+                        dark: '#000000',
+                        light: '#FFFFFF'
+                    }
+                }, function (error) {
+                    if (error) {
+                        console.error('QR Code generation failed:', error);
+                        canvas.parentElement.innerHTML = '<div style="color: #ff5252; padding: 15px;">שגיאה ביצירת QR קוד</div>';
+                    } else {
+                        canvas.style.cursor = 'pointer';
+                        canvas.onclick = () => {
+                            window.open(validationUrl, '_blank');
+                        };
+                    }
+                });
+            }
+        }, 100);
     }
 }
 

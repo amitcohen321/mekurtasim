@@ -365,21 +365,20 @@
             letter-spacing: 0.3px; /* Further reduced */
         }
         #validation-code-input {
-            padding: 12px; /* Reduced from 15px */
-            font-size: 1.5rem; /* Reduced from 1.7rem */
-            border-radius: 8px; /* Reduced from 10px */
+            padding: 12px;
+            font-size: 1rem;
+            border-radius: 8px;
             border: 1px solid rgba(255,215,0,0.4);
             background: rgba(0,0,0,0.4);
             color: #FFD700;
             text-align: center;
             width: 100%; 
-            max-width: 260px; /* Reduced from 300px */
-            margin: 0 auto 12px auto; /* Reduced bottom margin */
+            max-width: 400px;
+            margin: 0 auto 12px auto;
             display: block;
-            -moz-appearance: textfield; /* Remove arrows for Firefox */
             font-weight: bold;
-            letter-spacing: 4px; /* Reduced letter spacing */
             transition: all 0.3s ease;
+            font-family: monospace;
         }
         #validation-code-input:focus {
             outline: none;
@@ -528,9 +527,9 @@
         </div>
         
         <div class="code-validation-section" id="code-validation-section">
-            <h3>אימות מהיר באמצעות קוד</h3>
-            <input type="number" id="validation-code-input" placeholder="הכנס קוד" inputmode="numeric" maxlength="5" pattern="\d{5}" oninput="this.value=this.value.slice(0,5)">
-            <button class="btn" onclick="validateByCode()">אשר קוד</button>
+            <h3>אימות מהיר באמצעות טוקן</h3>
+            <input type="text" id="validation-code-input" placeholder="הכנס טוקן אימות" maxlength="32" style="direction: ltr;">
+            <button class="btn" onclick="validateByCode()">אשר טוקן</button>
             <div id="code-validation-status"></div>
         </div>
         
@@ -538,6 +537,7 @@
             <button class="tab active" onclick="switchTab(this, 'guests')">רשימת אורחים</button>
             <button class="tab" onclick="switchTab(this, 'entries')">כניסות אחרונות</button>
             <button class="tab" onclick="switchTab(this, 'add-guest')">הוסף אורח</button>
+            <button class="tab" onclick="switchTab(this, 'scanner')">סרוק QR</button>
             <button class="tab" onclick="switchTab(this, 'qr-code')">QR לסריקה</button>
         </div>
         
@@ -601,6 +601,40 @@
                         <li>• מספר הטלפון חייב להתחיל ב-05 ולהכיל 10 ספרות</li>
                         <li>• ניתן להוסיף עד 10 כרטיסים לאורח</li>
                         <li>• לאחר ההוספה, האורח יקבל הודעת SMS עם קישור לאימות</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="scanner-tab">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px; text-align: center;">
+                <h3 style="color:#FFD700; margin-bottom:25px; text-align: center; font-size: 1.8rem;">סריקת QR קוד</h3>
+                
+                <div id="scanner-container" style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; margin-bottom: 20px;">
+                    <video id="scanner-video" autoplay playsinline style="width: 100%; max-width: 400px; height: 300px; border-radius: 10px; background: #000; display: none;"></video>
+                    
+                    <div id="scanner-placeholder" style="width: 100%; max-width: 400px; height: 300px; background: #333; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                        <div style="text-align: center; color: #fff; opacity: 0.7;">
+                            <div style="font-size: 3rem; margin-bottom: 10px;">📷</div>
+                            <div>לחץ "התחל סריקה" להפעלת המצלמה</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                    <button id="start-scanner-btn" class="btn" onclick="startScanner()">התחל סריקה</button>
+                    <button id="stop-scanner-btn" class="btn secondary" onclick="stopScanner()" style="display: none;">עצור סריקה</button>
+                </div>
+                
+                <div id="scanner-status" style="margin-top: 15px; font-size: 1rem; min-height: 1.5em;"></div>
+                
+                <div style="margin-top: 30px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 10px; font-size: 0.9rem; line-height: 1.6; text-align: right;">
+                    <h4 style="color: #FFD700; margin-bottom: 10px;">הוראות:</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li>• לחץ "התחל סריקה" להפעלת המצלמה</li>
+                        <li>• כוון את QR הקוד של האורח למרכז המסך</li>
+                        <li>• הקוד ייסרק אוטומטית ויוצג פופאפ של האורח</li>
+                        <li>• לחץ "סמן כנכנס" בפופאפ לאישור הכניסה</li>
                     </ul>
                 </div>
             </div>
@@ -763,7 +797,7 @@
                     <tr style="background:#000;color:#FFD700;">
                         <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: right; width: 30%;">שם</th>
                         <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: center; width: 25%;">טלפון</th>
-                        <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: center; width: 15%;">קוד</th>
+                        <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: center; width: 15%;">טוקן</th>
                         <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: center; width: 15%;">אושר</th>
                         <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: center; width: 15%;">נכנס</th>
                     </tr>
@@ -773,7 +807,7 @@
                         <tr class="guest-row" style="cursor: pointer; ${index % 2 === 0 ? 'background: rgba(255,255,255,0.02);' : ''}" onclick='showGuestDetails(${JSON.stringify(g).replace(/'/g, "&#39;")})'>
                             <td style="padding:${isMobile ? '14px 8px' : '14px'}; font-size: ${isMobile ? '1rem' : '0.9rem'}; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.1);">${g.name}</td>
                             <td style="padding:${isMobile ? '14px 8px' : '14px'}; direction: ltr; font-size: ${isMobile ? '1rem' : '0.9rem'}; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">${g.realPhone || g.phone}</td>
-                            <td style="padding:${isMobile ? '14px 8px' : '14px'}; font-size: ${isMobile ? '1rem' : '0.85rem'}; font-family: monospace; direction: ltr; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); color: #FFD700; font-weight: bold;">R-${g.uniqueCode || '-'}</td>
+                            <td style="padding:${isMobile ? '14px 8px' : '14px'}; font-size: ${isMobile ? '0.8rem' : '0.7rem'}; font-family: monospace; direction: ltr; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); color: #FFD700; font-weight: bold;">${g.uniqueToken ? g.uniqueToken.substring(0, 8) + '...' : '-'}</td>
                             <td style="padding:${isMobile ? '14px 8px' : '14px'}; font-size: ${isMobile ? '1rem' : '0.9rem'}; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">${g.validated ? '<span style="color: #4CAF50;">✓</span>' : '<span style="color: #999;">-</span>'}</td>
                             <td style="padding:${isMobile ? '14px 8px' : '14px'}; font-size: ${isMobile ? '1rem' : '0.9rem'}; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">${g.entered ? '<span style="color: #4CAF50;">✓</span>' : '<span style="color: #999;">-</span>'}</td>
                         </tr>
@@ -837,10 +871,15 @@
             
             // Hide/show code validation section based on tab
             const codeValidationSection = document.getElementById('code-validation-section');
-            if (tabName === 'qr-code') {
+            if (tabName === 'qr-code' || tabName === 'scanner') {
                 codeValidationSection.style.display = 'none';
             } else {
                 codeValidationSection.style.display = 'block';
+            }
+            
+            // Stop scanner when switching away from scanner tab
+            if (tabName !== 'scanner' && scanning) {
+                stopScanner();
             }
         }
         
@@ -902,8 +941,71 @@
             }
         });
         
+        // Handle URL fragment for guest validation
+        function handleUrlFragment() {
+            const hash = window.location.hash;
+            if (hash.startsWith('#validate-guest=')) {
+                try {
+                    const encodedData = hash.substring('#validate-guest='.length);
+                    const guestData = JSON.parse(decodeURIComponent(encodedData));
+                    
+                    // Show guest popup
+                    showGuestDetails(guestData);
+                    
+                    // Clear the hash
+                    history.replaceState(null, null, ' ');
+                } catch (error) {
+                    console.error('Error parsing guest data from URL:', error);
+                }
+            }
+        }
+        
+        // Function to mark guest as entered via API
+        async function markGuestAsEntered(phone) {
+            if (!phone) return;
+            
+            try {
+                // Find the guest's token from the current data
+                let token = null;
+                if (window.allGuests) {
+                    const guest = window.allGuests.find(g => (g.realPhone || g.phone) === phone);
+                    token = guest ? guest.uniqueToken : null;
+                }
+                
+                if (!token) {
+                    alert('לא ניתן למצוא טוקן עבור אורח זה');
+                    return;
+                }
+                
+                const response = await fetch('/api/validate-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ code: token })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(`אורח ${result.guestName} אומת בהצלחה לכניסה!`);
+                    closeModal();
+                    await loadData(); // Refresh all data
+                } else {
+                    alert(`שגיאה: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('Error marking guest as entered:', error);
+                alert('שגיאה בחיבור לשרת');
+            }
+        }
+        
         // Load data on page load
         loadData();
+        
+        // Handle URL fragments on page load and navigation
+        window.addEventListener('load', handleUrlFragment);
+        window.addEventListener('hashchange', handleUrlFragment);
         
         // Handle window resize for responsive table
         let resizeTimeout;
@@ -962,8 +1064,15 @@
 
                     ${guest.validated ? `
                         <div class="guest-detail">
-                            <div class="guest-detail-label">קוד אימות</div>
-                            <div class="guest-detail-value" style="font-family: monospace; font-size: 1.3rem; font-weight: bold; color: #FFD700; letter-spacing: 2px; direction: ltr;">R-${guest.uniqueCode || '-'}</div>
+                            <div class="guest-detail-label">טוקן אימות</div>
+                            <div class="guest-detail-value" style="font-family: monospace; font-size: 0.9rem; font-weight: bold; color: #FFD700; direction: ltr; word-break: break-all;">${guest.uniqueToken || '-'}</div>
+                        </div>
+                        <div class="guest-detail" style="text-align: center;">
+                            <button onclick="markGuestAsEntered('${guest.realPhone || guest.phone}')" 
+                                    style="background: #4CAF50; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem;"
+                                    ${guest.entered ? 'disabled style="background: #666; cursor: not-allowed;"' : ''}>
+                                ${guest.entered ? 'כבר נכנס' : 'סמן כנכנס'}
+                            </button>
                         </div>
                     ` : ''}
 
@@ -1002,9 +1111,9 @@
                 return;
             }
 
-            // Basic check if it's a number, though type="number" helps
-            if (isNaN(parseInt(code))) {
-                statusEl.textContent = 'הקוד חייב להיות מספר.';
+            // Basic validation for token format (hex string)
+            if (!/^[a-f0-9]+$/i.test(code) || code.length !== 32) {
+                statusEl.textContent = 'הטוקן חייב להיות מחרוזת hex באורך 32 תווים.';
                 statusEl.style.color = 'red';
                 return;
             }
@@ -1039,6 +1148,127 @@
                 statusEl.textContent = 'שגיאה בתקשורת עם השרת.';
                 statusEl.style.color = 'red';
             }
+        }
+        
+        // QR Scanner functionality
+        let qrScanner = null;
+        
+        async function startScanner() {
+            const video = document.getElementById('scanner-video');
+            const placeholder = document.getElementById('scanner-placeholder');
+            const startBtn = document.getElementById('start-scanner-btn');
+            const stopBtn = document.getElementById('stop-scanner-btn');
+            const statusEl = document.getElementById('scanner-status');
+            
+            try {
+                statusEl.textContent = 'מבקש גישה למצלמה...';
+                statusEl.style.color = '#FFD700';
+                
+                // Check if BarcodeDetector is available
+                if ('BarcodeDetector' in window) {
+                    console.log('BarcodeDetector available');
+                    
+                    // Request camera access
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { 
+                            facingMode: 'environment',
+                            width: { ideal: 640 },
+                            height: { ideal: 480 }
+                        }
+                    });
+                    
+                    video.srcObject = stream;
+                    video.play();
+                    
+                    // Show video, hide placeholder
+                    placeholder.style.display = 'none';
+                    video.style.display = 'block';
+                    
+                    // Update buttons
+                    startBtn.style.display = 'none';
+                    stopBtn.style.display = 'inline-block';
+                    
+                    statusEl.textContent = 'מצלמה פעילה - כוון QR קוד למרכז המסך';
+                    statusEl.style.color = '#4CAF50';
+                    
+                    // Start scanning
+                    scanForQRCodes(video, statusEl);
+                    
+                } else {
+                    throw new Error('BarcodeDetector not supported in this browser');
+                }
+                
+            } catch (error) {
+                console.error('Scanner error:', error);
+                statusEl.textContent = `שגיאה: ${error.message === 'Permission denied' ? 'נדחתה גישה למצלמה' : 'לא ניתן להפעיל מצלמה'}`;
+                statusEl.style.color = 'red';
+            }
+        }
+        
+        function stopScanner() {
+            const video = document.getElementById('scanner-video');
+            const placeholder = document.getElementById('scanner-placeholder');
+            const startBtn = document.getElementById('start-scanner-btn');
+            const stopBtn = document.getElementById('stop-scanner-btn');
+            const statusEl = document.getElementById('scanner-status');
+            
+            // Stop video stream
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
+            
+            // Show placeholder, hide video
+            video.style.display = 'none';
+            placeholder.style.display = 'flex';
+            
+            // Update buttons
+            stopBtn.style.display = 'none';
+            startBtn.style.display = 'inline-block';
+            
+            statusEl.textContent = '';
+        }
+        
+        let scanning = false;
+        
+        async function scanForQRCodes(video, statusEl) {
+            if (scanning) return;
+            scanning = true;
+            
+            const barcodeDetector = new BarcodeDetector({ formats: ['qr_code'] });
+            
+            async function scan() {
+                if (!scanning || !video.srcObject) return;
+                
+                try {
+                    const barcodes = await barcodeDetector.detect(video);
+                    
+                    if (barcodes.length > 0) {
+                        const qrCode = barcodes[0];
+                        console.log('QR Code detected:', qrCode.rawValue);
+                        
+                        // Check if it's a validation URL
+                        if (qrCode.rawValue.includes('/admin/validate/')) {
+                            scanning = false; // Stop scanning
+                            statusEl.textContent = 'QR קוד זוהה! מעבר לאימות...';
+                            statusEl.style.color = '#4CAF50';
+                            
+                            // Navigate to the validation URL
+                            window.location.href = qrCode.rawValue;
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.error('QR detection error:', error);
+                }
+                
+                // Continue scanning
+                if (scanning) {
+                    requestAnimationFrame(scan);
+                }
+            }
+            
+            scan();
         }
     </script>
 </body>

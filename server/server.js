@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const crypto = require('crypto');
 
 const app = express();
 app.set('trust proxy', 1); // trust first proxy for correct IP detection behind Render/Heroku/etc.
@@ -14,24 +15,24 @@ const { guestsByPhone } = require('./guests.js');
 // In-memory cache for validated entries
 const validatedEntries = new Map();
 
-// Function to generate unique 5-digit code
-function generateUniqueCode() {
-    let code;
+// Function to generate unique URL-safe token
+function generateUniqueToken() {
+    let token;
     let attempts = 0;
     
     do {
-        // Generate 5-digit code (10000-99999)
-        code = Math.floor(Math.random() * 90000 + 10000).toString();
+        // Generate 32-character hex token
+        token = crypto.randomBytes(16).toString('hex');
         attempts++;
         // Prevent infinite loop
         if (attempts > 1000) {
-            // Fallback: use last 5 digits of timestamp
-            code = Date.now().toString().slice(-5);
+            // Fallback: use timestamp-based token
+            token = crypto.createHash('sha256').update(Date.now().toString()).digest('hex').substring(0, 32);
             break;
         }
-    } while (Array.from(validatedEntries.values()).some(entry => entry.uniqueCode === code));
+    } while (Array.from(validatedEntries.values()).some(entry => entry.uniqueToken === token));
     
-    return code;
+    return token;
 }
 
 // Middleware
@@ -40,10 +41,10 @@ app.use(helmet({
         directives: {
             defaultSrc: ["'self'"],
             styleSrc: ["'self'", "'unsafe-inline'", "https:"],
-            scriptSrc: ["'self'", "'unsafe-inline'"], // Allow inline scripts
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://unpkg.com", "https://cdnjs.cloudflare.com"], // Allow CDN scripts
             scriptSrcAttr: ["'unsafe-inline'"], // Allow inline event handlers like onclick
             connectSrc: ["'self'"], // Allow fetch/XHR to same origin
-            imgSrc: ["'self'", "data:"],
+            imgSrc: ["'self'", "data:", "https://api.qrserver.com"],
             fontSrc: ["'self'", "https:", "data:"]
         }
     }
@@ -91,9 +92,9 @@ app.post('/api/validate', (req, res) => {
         return res.status(403).json({ 
             success: false, 
             message: 'מספר זה כבר אומת בעבר',
-            validatedAt: entry.timestamp,
+            validatedAt: entry.phoneValidationTimestamp,
             validatedBy: entry.name,
-            uniqueCode: entry.uniqueCode
+            uniqueToken: entry.uniqueToken
         });
     }
     
@@ -107,7 +108,7 @@ app.post('/api/validate', (req, res) => {
             tickets: guest.tickets,
             phoneValidationTimestamp: new Date().toISOString(), // Renamed for clarity
             ip: req.ip,
-            uniqueCode: generateUniqueCode(),
+            uniqueToken: generateUniqueToken(),
             entered: false,                 // Tracks if guest has actually entered
             entryTimestamp: null,           // Timestamp for actual entry
             enteredBy: null                 // Method/admin who confirmed entry
@@ -118,8 +119,8 @@ app.post('/api/validate', (req, res) => {
             guest: {
                 name: guest.name,
                 tickets: guest.tickets,
-                uniqueCode: validatedEntries.get(cleanedPhone).uniqueCode,
-                displayCode: `R${validatedEntries.get(cleanedPhone).uniqueCode}`
+                uniqueToken: validatedEntries.get(cleanedPhone).uniqueToken,
+                validationUrl: `${req.protocol}://${req.get('host')}/admin/validate/${validatedEntries.get(cleanedPhone).uniqueToken}`
             }
         });
     }
@@ -168,7 +169,7 @@ app.get('/api/guests', (req, res) => {
             tickets: guest.tickets,
             validated: validated, // True if phone was validated
             phoneValidationTimestamp: validationData ? validationData.phoneValidationTimestamp : null,
-            uniqueCode: validationData ? validationData.uniqueCode : null,
+            uniqueToken: validationData ? validationData.uniqueToken : null,
             entered: validationData ? validationData.entered : false,
             entryTimestamp: validationData ? validationData.entryTimestamp : null,
             enteredBy: validationData ? validationData.enteredBy : null
@@ -218,7 +219,7 @@ app.post('/api/validate-code', (req, res) => {
     let guestPhoneKey = null;
 
     for (const [phone, entryData] of validatedEntries.entries()) {
-        if (entryData.uniqueCode === code) {
+        if (entryData.uniqueToken === code) {
             foundEntry = entryData;
             guestPhoneKey = phone;
             break;
@@ -248,6 +249,67 @@ app.post('/api/validate-code', (req, res) => {
     } else {
         return res.status(404).json({ success: false, message: 'קוד שגוי או לא קיים.' });
     }
+});
+
+// New QR code validation endpoint - redirects to admin with guest popup
+app.get('/admin/validate/:token', (req, res) => {
+    const { token } = req.params;
+    
+    if (!token) {
+        return res.status(400).send('Token is required');
+    }
+
+    let foundEntry = null;
+    let guestPhoneKey = null;
+
+    // Find the guest by token
+    for (const [phone, entryData] of validatedEntries.entries()) {
+        if (entryData.uniqueToken === token) {
+            foundEntry = entryData;
+            guestPhoneKey = phone;
+            break;
+        }
+    }
+
+    if (!foundEntry) {
+        return res.status(404).send(`
+            <!DOCTYPE html>
+            <html dir="rtl" lang="he">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>קוד לא תקין</title>
+                <style>
+                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #1a1a1a; color: white; }
+                    .error { background: #ff5252; padding: 20px; border-radius: 8px; margin: 20px auto; max-width: 400px; }
+                </style>
+            </head>
+            <body>
+                <div class="error">
+                    <h2>❌ קוד לא תקין</h2>
+                    <p>הקוד שסרקת אינו תקין או פג תוקפו</p>
+                </div>
+            </body>
+            </html>
+        `);
+    }
+
+    // Redirect to admin page with guest info in URL fragment
+    const guestData = {
+        name: foundEntry.name,
+        phone: guestPhoneKey,
+        realPhone: guestPhoneKey,
+        tickets: foundEntry.tickets,
+        validated: true,
+        phoneValidationTimestamp: foundEntry.phoneValidationTimestamp,
+        uniqueToken: foundEntry.uniqueToken,
+        entered: foundEntry.entered,
+        entryTimestamp: foundEntry.entryTimestamp,
+        enteredBy: foundEntry.enteredBy
+    };
+
+    const encodedGuestData = encodeURIComponent(JSON.stringify(guestData));
+    res.redirect(`/admin#validate-guest=${encodedGuestData}`);
 });
 
 // Start server

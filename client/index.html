@@ -31,6 +31,12 @@
     
     <!-- Scripts -->
     <script src="guests.js" defer></script>
+    <script src="qrcode-simple.js"></script>
+    <script>
+        // Use our simple QR implementation
+        window.QRCode = window.SimpleQR;
+        console.log('Local QR code library loaded');
+    </script>
     <script src="script.js" defer></script>
 </head>
 <body>
