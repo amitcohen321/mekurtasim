@@ -66,7 +66,7 @@ app.use('/api/', limiter);
 
 // API endpoint for phone validation
 app.post('/api/validate', (req, res) => {
-    const { phone } = req.body;
+    const { phone, newsletter } = req.body;
     
     if (!phone) {
         return res.status(400).json({ 
@@ -111,7 +111,8 @@ app.post('/api/validate', (req, res) => {
             uniqueToken: generateUniqueToken(),
             entered: false,                 // Tracks if guest has actually entered
             entryTimestamp: null,           // Timestamp for actual entry
-            enteredBy: null                 // Method/admin who confirmed entry
+            enteredBy: null,                // Method/admin who confirmed entry
+            newsletter: newsletter || false // Newsletter preference
         });
         
         return res.json({
@@ -172,7 +173,8 @@ app.get('/api/guests', (req, res) => {
             uniqueToken: validationData ? validationData.uniqueToken : null,
             entered: validationData ? validationData.entered : false,
             entryTimestamp: validationData ? validationData.entryTimestamp : null,
-            enteredBy: validationData ? validationData.enteredBy : null
+            enteredBy: validationData ? validationData.enteredBy : null,
+            newsletter: validationData ? validationData.newsletter : false
         };
     });
     // Sort by name
@@ -195,6 +197,22 @@ app.post('/api/guests', (req, res) => {
     }
     guestsByPhone[cleanedPhone] = { name, tickets };
     res.json({ success: true, guest: { name, phone: cleanedPhone, tickets } });
+});
+
+// API endpoint to get newsletter subscribers (for admin)
+app.get('/api/newsletter-subscribers', (req, res) => {
+    const subscribers = Array.from(validatedEntries.entries())
+        .filter(([phone, data]) => data.newsletter === true)
+        .map(([phone, data]) => ({
+            phone: phone,
+            name: data.name,
+            subscribedAt: data.phoneValidationTimestamp
+        }));
+    
+    res.json({
+        count: subscribers.length,
+        subscribers: subscribers
+    });
 });
 
 // Health check

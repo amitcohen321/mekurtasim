@@ -239,6 +239,27 @@ body {
     font-size: 1rem;
 }
 
+/* Newsletter Checkbox Styles */
+.newsletter-checkbox {
+    transition: all 0.3s ease;
+}
+
+.newsletter-checkbox label {
+    transition: opacity 0.3s ease;
+}
+
+.newsletter-checkbox label:hover {
+    opacity: 1 !important;
+}
+
+.newsletter-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--sky-mid);
+    cursor: pointer;
+    border-radius: 3px;
+}
+
 /* Button Styles */
 #submit-btn {
     width: 100%;

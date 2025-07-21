@@ -261,13 +261,20 @@ form.addEventListener('submit', async (e) => {
     showLoader();
     
     try {
+        // Get newsletter preference
+        const newsletterCheckbox = document.getElementById('newsletter-checkbox');
+        const wantsNewsletter = newsletterCheckbox ? newsletterCheckbox.checked : false;
+        
         // Call API
         const response = await fetch(`${API_URL}/validate`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ phone: phoneNumber })
+            body: JSON.stringify({ 
+                phone: phoneNumber,
+                newsletter: wantsNewsletter 
+            })
         });
         
         const data = await response.json();
