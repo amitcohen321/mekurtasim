@@ -1,34 +1,36 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="שקיעה על הגג">
     <meta name="application-name" content="שקיעה על הגג">
     <meta name="theme-color" content="#FF9C42">
     <meta name="msapplication-TileColor" content="#FF9C42">
-    
+
     <!-- iOS Home Screen Icons -->
     <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
     <link rel="icon" type="image/svg+xml" href="icon.svg">
-    
+
     <!-- Web App Manifest -->
     <link rel="manifest" href="manifest.json">
-    
+
     <title>מסיבת גג - שקיעה על הגג</title>
-    
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Stylesheets -->
     <link rel="stylesheet" href="styles.css">
-    
+
     <!-- Scripts -->
     <script src="guests.js" defer></script>
     <script src="qrcode-simple.js"></script>
@@ -39,6 +41,7 @@
     </script>
     <script src="script.js" defer></script>
 </head>
+
 <body>
     <main class="hero">
         <!-- String lights decoration -->
@@ -49,40 +52,99 @@
             <span class="bulb"></span>
             <span class="bulb"></span>
         </div>
-        
+
         <div class="overlay">
-            <h1 class="title">🌅 שקיעה על הגג</h1>
             <p class="subtitle">נא להזין מספר טלפון</p>
-            
+
             <form id="gate-form" autocomplete="off">
-                <input 
-                    id="phone-input" 
-                    type="tel" 
-                    placeholder="05xxxxxxxx" 
-                    maxlength="20" 
-                    required
-                    autocomplete="off"
-                    dir="ltr"
-                >
-                
+                <input id="phone-input" type="tel" placeholder="05xxxxxxxx" maxlength="20" required autocomplete="off"
+                    dir="ltr">
+
                 <div class="newsletter-checkbox" style="margin: 16px 0; text-align: right;">
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem; opacity: 0.9;">
+                    <label
+                        style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.9rem; opacity: 0.9;">
                         <input type="checkbox" id="newsletter-checkbox" style="margin: 0;">
-                        <span>אני מעוניין/ת לקבל עדכונים על אירועים עתידיים</span>
+                        <span style="color: black; display: flex; align-items: center; gap: 4px;">
+                            <b>
+                                דברו איתי גם לגבי המסיבות הבאות!
+                            </b>
+                            <span id="disclaimer-info" title="מידע משפטי"
+                                style="cursor: pointer; font-size: 1.1em; line-height: 1; display: inline-flex; align-items: center;">ℹ️</span>
+                        </span>
                     </label>
                 </div>
-                
+                <!-- Disclaimer Modal -->
+                <div id="disclaimer-modal" class="disclaimer-modal hidden">
+                    <div class="disclaimer-content">
+                        <span id="close-disclaimer" style="cursor:pointer; float:left; font-size:1.2em;">✖️</span>
+                        <div style="margin-top: 8px;">
+                            אני מאשר/ת קבלת הודעות טקסט ו/או ווצאפ עם עדכונים על מסיבות עתידיות מטעם צוות ההפקה של
+                            האירוע. ידוע לי כי ניתן לבטל את ההסכמה בכל עת על ידי שליחת הודעה למארגנים.
+                        </div>
+                    </div>
+                </div>
                 <button id="submit-btn" type="submit">
                     <span class="btn-text">בדוק רישום</span>
                     <span class="btn-icon">🔍</span>
                 </button>
             </form>
-            
+
             <div id="result" class="result hidden"></div>
         </div>
-        
+
         <!-- City skyline silhouette -->
         <div class="skyline"></div>
     </main>
 </body>
-</html> 
+<style>
+    .disclaimer-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+
+    .disclaimer-modal.hidden {
+        display: none;
+    }
+
+    .disclaimer-content {
+        background: #fff;
+        color: #222;
+        padding: 24px 18px 18px 18px;
+        border-radius: 12px;
+        max-width: 350px;
+        box-shadow: 0 2px 16px rgba(0, 0, 0, 0.18);
+        font-size: 1rem;
+        text-align: right;
+        position: relative;
+    }
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var infoIcon = document.getElementById('disclaimer-info');
+        var modal = document.getElementById('disclaimer-modal');
+        var closeBtn = document.getElementById('close-disclaimer');
+        if (infoIcon && modal && closeBtn) {
+            infoIcon.addEventListener('click', function (e) {
+                modal.classList.remove('hidden');
+            });
+            closeBtn.addEventListener('click', function (e) {
+                modal.classList.add('hidden');
+            });
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+        }
+    });
+</script>
+
+</html>

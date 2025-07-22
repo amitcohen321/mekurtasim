@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 const crypto = require('crypto');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 app.set('trust proxy', 1); // trust first proxy for correct IP detection behind Render/Heroku/etc.
@@ -51,6 +52,7 @@ app.use(helmet({
 }));
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 
 // Serve static files from client directory
 app.use(express.static(path.join(__dirname, '../client')));
@@ -63,6 +65,21 @@ const limiter = rateLimit({
 });
 
 app.use('/api/', limiter);
+
+// Middleware to check for admin cookie
+function requireAdminCookie(req, res, next) {
+  if (req.cookies && req.cookies.isAdmin === 'true') {
+    next();
+  } else {
+    res.status(403).send('Forbidden');
+  }
+}
+
+// Hidden login route
+app.get('/login', (req, res) => {
+  res.cookie('isAdmin', 'true', { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
+  res.send('Admin cookie set. You can now access /admin.');
+});
 
 // API endpoint for phone validation
 app.post('/api/validate', (req, res) => {
@@ -134,7 +151,7 @@ app.post('/api/validate', (req, res) => {
 });
 
 // API endpoint to check validation status (for admin)
-app.get('/api/status', (req, res) => {
+app.get('/api/status', requireAdminCookie, (req, res) => {
     const stats = {
         totalGuests: Object.keys(guestsByPhone).length,
         validatedCount: validatedEntries.size,
@@ -146,7 +163,7 @@ app.get('/api/status', (req, res) => {
 });
 
 // API endpoint to get validated entries (for admin)
-app.get('/api/validated', (req, res) => {
+app.get('/api/validated', requireAdminCookie, (req, res) => {
     const entries = Array.from(validatedEntries.entries()).map(([phone, data]) => ({
         phone: phone.substring(0, 3) + '****' + phone.substring(7), // Partial phone for privacy
         ...data
@@ -159,7 +176,7 @@ app.get('/api/validated', (req, res) => {
 });
 
 // API endpoint to get all guests with validation status (for admin)
-app.get('/api/guests', (req, res) => {
+app.get('/api/guests', requireAdminCookie, (req, res) => {
     const guests = Object.entries(guestsByPhone).map(([phone, guest]) => {
         const validated = validatedEntries.has(phone);
         const validationData = validated ? validatedEntries.get(phone) : null;
@@ -183,7 +200,7 @@ app.get('/api/guests', (req, res) => {
 });
 
 // API endpoint to add a new guest (for admin)
-app.post('/api/guests', (req, res) => {
+app.post('/api/guests', requireAdminCookie, (req, res) => {
     const { name, phone, tickets, newsletter } = req.body;
     if (!name || !phone || typeof tickets !== 'number') {
         return res.status(400).json({ success: false, message: 'Missing required fields' });
@@ -216,7 +233,7 @@ app.post('/api/guests', (req, res) => {
 });
 
 // API endpoint to get newsletter subscribers (for admin)
-app.get('/api/newsletter-subscribers', (req, res) => {
+app.get('/api/newsletter-subscribers', requireAdminCookie, (req, res) => {
     const subscribers = Array.from(validatedEntries.entries())
         .filter(([phone, data]) => data.newsletter === true)
         .map(([phone, data]) => ({
@@ -237,7 +254,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Admin page route
-app.get('/admin', (req, res) => {
+app.get('/admin', requireAdminCookie, (req, res) => {
     res.sendFile(path.join(__dirname, '../client/admin.html'));
 });
 
@@ -286,7 +303,7 @@ app.post('/api/validate-code', (req, res) => {
 });
 
 // New QR code validation endpoint - redirects to admin with guest popup
-app.get('/admin/validate/:token', (req, res) => {
+app.get('/admin/validate/:token', requireAdminCookie, (req, res) => {
     const { token } = req.params;
     
     if (!token) {

@@ -33,7 +33,7 @@ function isValidPhoneNumber(phone) {
 function checkGuest(phoneNumber) {
     const cleaned = cleanPhoneNumber(phoneNumber);
     const guestData = guestsByPhone[cleaned];
-    
+
     if (guestData && guestData.tickets > 0) {
         return {
             name: guestData.name,
@@ -52,52 +52,50 @@ function showSuccess(guest) {
         <div class="tickets-info">
             🎟️ רשומים על שמך ${guest.tickets} כרטיסים
         </div>
+                <div class="entrance-code-section" style="background: rgba(255,255,255,0.2); padding: 16px; margin: 16px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.4); text-align: center;">
+            <div style="font-size: 1.1rem; margin-bottom: 8px; font-weight: bold;">🚪 קוד כניסה לדלת:</div>
+            <div class="door-code" style="font-size: 2rem; font-weight: bold; letter-spacing: 4px; font-family: 'Courier New', monospace; color: #FFD700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">${DOOR_CODE}</div>
+        </div>
         ${guest.uniqueToken ? `
         <div class="qr-code-section" style="background: rgba(255,255,255,0.15); padding: 20px; margin: 20px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.3); text-align: center;">
-            <div style="font-size: 1.1rem; margin-bottom: 12px; font-weight: bold;">🎫 קוד QR לכניסה:</div>
+            <div style="font-size: 1.1rem; margin-bottom: 12px; font-weight: bold;"> קוד QR לכניסה:</div>
             <div style="background: white; padding: 15px; border-radius: 8px; display: inline-block; margin: 12px 0;">
                 <canvas id="qr-canvas" style="display: block;"></canvas>
             </div>
             <div style="font-size: 0.9rem; color: rgba(255,255,255,0.8); margin-top: 8px; line-height: 1.4;">
-                <strong>הראו קוד זה לצוות בכניסה</strong><br>
-                או לחצו עליו לפתיחת הלינק
+                <strong>הראו קוד זה למארחת בכניסה</strong><br>
             </div>
         </div>
         ` : ''}
-        <div class="entrance-code-section" style="background: rgba(255,255,255,0.2); padding: 16px; margin: 16px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.4); text-align: center;">
-            <div style="font-size: 1.1rem; margin-bottom: 8px; font-weight: bold;">🚪 קוד כניסה לדלת:</div>
-            <div class="door-code" style="font-size: 2rem; font-weight: bold; letter-spacing: 4px; font-family: 'Courier New', monospace; color: #FFD700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">${DOOR_CODE}</div>
-        </div>
+
         <div class="welcome-text">
         </div>
-        <div class="entry-instructions" style="text-align: center;">
-            אנחנו כבר מחכים לכם בפנים! 🎉
-        </div>
+
     `;
-    
+
     if (navigator.vibrate) {
         navigator.vibrate([100, 50, 100]);
     }
-    
+
     // Store successful validation in localStorage
     localStorage.setItem('partyValidated', JSON.stringify({
         guest: guest,
         timestamp: new Date().toISOString(),
         validated: true
     }));
-    
+
     logSuccessfulEntry(guest);
-    
+
     // Generate QR code if token exists
     if (guest.uniqueToken && guest.validationUrl) {
         console.log('Generating QR code for URL:', guest.validationUrl);
-        
+
         // Function to generate QR code
         const generateQR = () => {
             const canvas = document.getElementById('qr-canvas');
             console.log('Canvas element:', canvas);
             console.log('QRCode library available:', !!window.QRCode);
-            
+
             if (canvas && window.QRCode) {
                 console.log('Starting QR generation...');
                 QRCode.toCanvas(canvas, guest.validationUrl, {
@@ -137,7 +135,7 @@ function showSuccess(guest) {
                 }, 500);
             }
         };
-        
+
         // Wait a bit for DOM to be ready, then try to generate
         setTimeout(generateQR, 100);
     } else {
@@ -156,7 +154,7 @@ function showFailure() {
             📲 פנייה למנהל בוואטסאפ
         </a>
     `;
-    
+
     // רטט למכשירים ניידים
     if (navigator.vibrate) {
         navigator.vibrate(200);
@@ -174,7 +172,7 @@ function showInvalidPhoneError() {
             נא להזין מספר בפורמט: 052xxxxxxx
         </div>
     `;
-    
+
     // רטט למכשירים ניידים
     if (navigator.vibrate) {
         navigator.vibrate([50, 50, 50]);
@@ -185,7 +183,7 @@ function showInvalidPhoneError() {
 function updateSubmitButtonState() {
     const phoneValid = isValidPhoneNumber(phoneInput.value);
     submitBtn.disabled = !phoneValid;
-    
+
     if (phoneValid) {
         submitBtn.classList.add('enabled');
         submitBtn.classList.remove('disabled');
@@ -199,7 +197,7 @@ function updateSubmitButtonState() {
 function populateTicketOptions(guest) {
     // Clear existing options
     ticketNumber.innerHTML = '<option value="">בחרו כמות רשומים</option>';
-    
+
     // Add options from 1 to 10
     for (let i = 1; i <= 10; i++) {
         const option = document.createElement('option');
@@ -207,7 +205,7 @@ function populateTicketOptions(guest) {
         option.textContent = `${i}`;
         ticketNumber.appendChild(option);
     }
-    
+
     // Show ticket selector
     ticketSelector.classList.remove('hidden');
 }
@@ -222,7 +220,7 @@ function resetForm() {
     submitBtn.disabled = true;
     submitBtn.classList.add('disabled');
     submitBtn.classList.remove('enabled');
-    
+
     // Show phone label again
     if (phoneLabel) {
         phoneLabel.classList.remove('hidden');
@@ -244,42 +242,42 @@ function showLoader() {
 // Handle form submission
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const phoneNumber = phoneInput.value.trim();
-    
+
     if (!phoneNumber || !isValidPhoneNumber(phoneNumber)) {
         return;
     }
-    
+
     // Hide phone label
     if (phoneLabel) {
         phoneLabel.classList.add('hidden');
     }
-    
+
     // Hide form and show loader
     form.classList.add('hidden');
     showLoader();
-    
+
     try {
         // Get newsletter preference
         const newsletterCheckbox = document.getElementById('newsletter-checkbox');
         const wantsNewsletter = newsletterCheckbox ? newsletterCheckbox.checked : false;
-        
+
         // Call API
         const response = await fetch(`${API_URL}/validate`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 phone: phoneNumber,
-                newsletter: wantsNewsletter 
+                newsletter: wantsNewsletter
             })
         });
-        
+
         const data = await response.json();
         console.log('Server response:', data);
-        
+
         if (response.ok && data.success) {
             // Guest found and validated
             console.log('Guest data received:', data.guest);
@@ -303,18 +301,18 @@ form.addEventListener('submit', async (e) => {
 // Auto-format phone number as user types
 phoneInput.addEventListener('input', (e) => {
     let value = e.target.value;
-    
+
     // Remove any non-digit characters
     value = value.replace(/\D/g, '');
-    
+
     // Limit to 10 digits
     if (value.length > 10) {
         value = value.slice(0, 10);
     }
-    
+
     // Update input value with cleaned number
     e.target.value = value;
-    
+
     // Always update button state
     updateSubmitButtonState();
 });
@@ -329,21 +327,21 @@ window.addEventListener('load', () => {
             if (validationData.validated && validationData.guest) {
                 // Hide form and show success screen
                 form.classList.add('hidden');
-                
+
                 // Hide phone label
                 if (phoneLabel) {
                     phoneLabel.classList.add('hidden');
                 }
-                
+
                 // Show previous success
                 showSuccess(validationData.guest);
-                
+
                 // Show a different message indicating they're already validated
                 const alreadyValidatedMsg = document.createElement('div');
                 alreadyValidatedMsg.style.cssText = 'text-align: center; margin-top: 20px; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px; font-size: 0.9rem; opacity: 0.8;';
                 alreadyValidatedMsg.innerHTML = 'כבר אומתת בעבר - אין צורך לחפש שוב 👍';
                 resultDiv.appendChild(alreadyValidatedMsg);
-                
+
                 return;
             }
         } catch (e) {
@@ -351,7 +349,7 @@ window.addEventListener('load', () => {
             localStorage.removeItem('partyValidated');
         }
     }
-    
+
     // Normal flow - focus on input
     phoneInput.focus();
 });
@@ -413,11 +411,11 @@ function showAlreadyValidated(data) {
             📲 פנייה למנהל בוואטסאפ
         </a>
     `;
-    
+
     if (navigator.vibrate) {
         navigator.vibrate([200, 100, 200]);
     }
-    
+
     // Generate QR code for already validated guests
     if (data.uniqueToken) {
         setTimeout(() => {
