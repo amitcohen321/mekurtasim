@@ -60,18 +60,19 @@
                 <input id="phone-input" type="tel" placeholder="05xxxxxxxx" maxlength="20" required autocomplete="off"
                     dir="ltr">
 
-                <div class="newsletter-checkbox" style="margin: 16px 0; text-align: right;">
-                    <label
-                        style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.9rem; opacity: 0.9;">
-                        <input type="checkbox" id="newsletter-checkbox" style="margin: 0;">
+                <div class="newsletter-checkbox"
+                    style="display: flex; align-items: center; gap: 8px; margin: 16px 0; text-align: right;">
+                    <input type="checkbox" id="newsletter-checkbox" style="margin: 0;">
+                    <label for="newsletter-checkbox"
+                        style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.9rem; opacity: 0.9; margin: 0;">
                         <span style="color: black; display: flex; align-items: center; gap: 4px;">
                             <b>
                                 דברו איתי גם לגבי המסיבות הבאות!
                             </b>
-                            <span id="disclaimer-info" title="מידע משפטי"
-                                style="cursor: pointer; font-size: 1.1em; line-height: 1; display: inline-flex; align-items: center;">ℹ️</span>
                         </span>
                     </label>
+                    <span id="disclaimer-info" title="מידע משפטי"
+                        style="cursor: pointer; font-size: 1.1em; line-height: 1; display: inline-flex; align-items: center;">ℹ️</span>
                 </div>
                 <!-- Disclaimer Modal -->
                 <div id="disclaimer-modal" class="disclaimer-modal hidden">
