@@ -221,6 +221,10 @@ function resetForm() {
     submitBtn.classList.add('disabled');
     submitBtn.classList.remove('enabled');
 
+    // Reset newsletter checkbox
+    const newsletterCheckbox = document.getElementById('newsletter-checkbox');
+    if (newsletterCheckbox) newsletterCheckbox.checked = false;
+
     // Show phone label again
     if (phoneLabel) {
         phoneLabel.classList.remove('hidden');

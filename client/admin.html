@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>מסיבת גג - ניהול כניסות</title>
-    
+
     <!-- PWA Metadata -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,49 +14,54 @@
     <meta name="theme-color" content="#FF9C42">
     <meta name="msapplication-TileColor" content="#FF9C42">
     <link rel="manifest" href="manifest.json">
-    
+
     <!-- Icons -->
     <link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
     <link rel="icon" type="image/png" sizes="32x32" href="icon-192.png">
     <link rel="icon" type="image/png" sizes="16x16" href="icon-192.png">
-    
+
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
-        html, body {
-            overflow-x: hidden; /* Prevent horizontal scrolling */
+
+        html,
+        body {
+            overflow-x: hidden;
+            /* Prevent horizontal scrolling */
             width: 100%;
             height: 100%;
         }
-        
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
             color: #fff;
             padding: 20px;
             min-height: 100vh;
-            position: relative; /* Ensure proper positioning context */
+            position: relative;
+            /* Ensure proper positioning context */
         }
-        
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            width: 100%; /* Ensure it doesn't exceed viewport */
-            overflow-x: hidden; /* Prevent any internal horizontal overflow */
+            width: 100%;
+            /* Ensure it doesn't exceed viewport */
+            overflow-x: hidden;
+            /* Prevent any internal horizontal overflow */
         }
-        
+
         h1 {
             text-align: center;
             margin-bottom: 30px;
             color: #FF9C42;
             font-size: 2.5rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
-        
+
         .controls {
             display: flex;
             gap: 10px;
@@ -63,7 +69,7 @@
             justify-content: center;
             flex-wrap: wrap;
         }
-        
+
         .btn {
             background: #FF9C42;
             color: white;
@@ -75,20 +81,20 @@
             font-weight: 600;
             transition: all 0.3s ease;
         }
-        
+
         .btn:hover {
             background: #FF7A00;
             transform: translateY(-2px);
         }
-        
+
         .btn.secondary {
             background: #333;
         }
-        
+
         .btn.secondary:hover {
             background: #555;
         }
-        
+
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -98,7 +104,7 @@
             margin-left: auto;
             margin-right: auto;
         }
-        
+
         .stat-card {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
@@ -108,11 +114,11 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             transition: transform 0.3s ease;
         }
-        
+
         .stat-card:hover {
             transform: translateY(-5px);
         }
-        
+
         .stat-number {
             font-size: 3.2rem;
             font-weight: bold;
@@ -120,37 +126,37 @@
             margin-bottom: 10px;
             letter-spacing: 2px;
         }
-        
+
         .stat-label {
             font-size: 1.2rem;
             opacity: 0.9;
             font-weight: 500;
         }
-        
+
         .progress-bar {
             width: 100%;
             height: 8px;
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 4px;
             margin-top: 10px;
             overflow: hidden;
         }
-        
+
         .progress-fill {
             height: 100%;
             background: linear-gradient(90deg, #FF9C42, #FFD700);
             transition: width 0.5s ease;
         }
-        
+
         .tabs {
             display: flex;
             gap: 0;
             margin-bottom: 20px;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 12px;
             padding: 4px;
         }
-        
+
         .tab {
             flex: 1;
             padding: 12px 20px;
@@ -162,12 +168,12 @@
             font-size: 1rem;
             transition: all 0.3s ease;
         }
-        
+
         .tab.active {
             background: #FF9C42;
             color: white;
         }
-        
+
         .tab-content {
             display: none;
             background: rgba(255, 255, 255, 0.1);
@@ -177,23 +183,24 @@
             overflow-y: auto;
             position: relative;
         }
-        
+
         .tab-content.active {
             display: block;
         }
-        
+
         /* Special styling for guests tab to make search sticky */
         #guests-tab {
             padding: 0;
             display: none;
-            min-height: 500px; /* Added to maintain consistent height */
+            min-height: 500px;
+            /* Added to maintain consistent height */
         }
-        
+
         #guests-tab.active {
             display: flex;
             flex-direction: column;
         }
-        
+
         .guests-search-header {
             padding: 20px 20px 10px 20px;
             background: rgba(0, 0, 0, 0.3);
@@ -202,22 +209,25 @@
             top: 0;
             z-index: 5;
         }
-        
+
         .guests-content-wrapper {
             flex: 1;
             overflow-y: auto;
             padding: 0 20px 20px 20px;
-            max-height: calc(600px - 70px); /* Account for search header height */
-            min-height: 400px; /* Added minimum height to prevent collapse */
+            max-height: calc(600px - 70px);
+            /* Account for search header height */
+            min-height: 400px;
+            /* Added minimum height to prevent collapse */
             display: flex;
             flex-direction: column;
         }
-        
+
         #guests-section {
             flex: 1;
-            min-height: 300px; /* Ensure the table area has minimum height */
+            min-height: 300px;
+            /* Ensure the table area has minimum height */
         }
-        
+
         .entry {
             padding: 15px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -226,32 +236,32 @@
             align-items: center;
             transition: background 0.3s ease;
         }
-        
+
         .entry:hover {
-            background: rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.05);
         }
-        
+
         .entry:last-child {
             border-bottom: none;
         }
-        
+
         .entry-info h4 {
             color: #FFD700;
             margin-bottom: 4px;
         }
-        
+
         .entry-details {
             text-align: right;
         }
-        
+
         .loading {
             text-align: center;
             padding: 40px;
             opacity: 0.6;
         }
-        
+
         .spinner {
-            border: 3px solid rgba(255,255,255,0.2);
+            border: 3px solid rgba(255, 255, 255, 0.2);
             border-top: 3px solid #FF9C42;
             border-radius: 50%;
             width: 30px;
@@ -259,18 +269,23 @@
             animation: spin 1s linear infinite;
             margin: 0 auto 15px;
         }
-        
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
-        
+
         .timestamp {
             font-size: 0.85rem;
             opacity: 0.7;
             margin-top: 5px;
         }
-        
+
         .badge {
             background: #FF9C42;
             color: white;
@@ -279,7 +294,7 @@
             font-size: 0.8rem;
             font-weight: 600;
         }
-        
+
         /* Modal styles */
         .modal-overlay {
             position: fixed;
@@ -294,7 +309,7 @@
             z-index: 1000;
             padding: 20px;
         }
-        
+
         .modal-content {
             background: #2d2d2d;
             border-radius: 12px;
@@ -304,7 +319,7 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             position: relative;
         }
-        
+
         .modal-close {
             position: absolute;
             top: 12px;
@@ -317,62 +332,71 @@
             opacity: 0.7;
             transition: opacity 0.3s;
         }
-        
+
         .modal-close:hover {
             opacity: 1;
         }
-        
+
         .guest-detail {
             margin-bottom: 16px;
         }
-        
+
         .guest-detail-label {
             color: #FFD700;
             font-size: 0.9rem;
             margin-bottom: 4px;
         }
-        
+
         .guest-detail-value {
             font-size: 1.1rem;
             direction: ltr;
             text-align: right;
         }
-        
+
         .guest-row {
             cursor: pointer;
             transition: background 0.2s;
         }
-        
+
         .guest-row:hover {
             background: rgba(255, 255, 255, 0.1);
         }
-        
+
         /* Styles for Code Validation Section */
         .code-validation-section {
             text-align: center;
-            margin-bottom: 20px; /* Reduced from 25px */
-            padding: 15px; /* Reduced from 20px */
-            background: linear-gradient(135deg, rgba(255,156,66,0.1) 0%, rgba(255,215,0,0.1) 100%);
-            border-radius: 10px; /* Reduced from 12px */
-            border: 1px solid rgba(255,215,0,0.3);
-            box-shadow: 0 1px 4px rgba(0,0,0,0.1); /* Reduced shadow */
+            margin-bottom: 20px;
+            /* Reduced from 25px */
+            padding: 15px;
+            /* Reduced from 20px */
+            background: linear-gradient(135deg, rgba(255, 156, 66, 0.1) 0%, rgba(255, 215, 0, 0.1) 100%);
+            border-radius: 10px;
+            /* Reduced from 12px */
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+            /* Reduced shadow */
         }
+
         .code-validation-section h3 {
-            color:#FFD700;
-            margin-bottom:10px; /* Reduced from 15px */
-            font-size: 1.3rem; /* Reduced from 1.5rem */
+            color: #FFD700;
+            margin-bottom: 10px;
+            /* Reduced from 15px */
+            font-size: 1.3rem;
+            /* Reduced from 1.5rem */
             font-weight: 600;
-            letter-spacing: 0.3px; /* Further reduced */
+            letter-spacing: 0.3px;
+            /* Further reduced */
         }
+
         #validation-code-input {
             padding: 12px;
             font-size: 1rem;
             border-radius: 8px;
-            border: 1px solid rgba(255,215,0,0.4);
-            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            background: rgba(0, 0, 0, 0.4);
             color: #FFD700;
             text-align: center;
-            width: 100%; 
+            width: 100%;
             max-width: 400px;
             margin: 0 auto 12px auto;
             display: block;
@@ -380,128 +404,150 @@
             transition: all 0.3s ease;
             font-family: monospace;
         }
+
         #validation-code-input:focus {
             outline: none;
             border-color: #FFD700;
-            box-shadow: 0 0 10px rgba(255,215,0,0.2); /* Reduced shadow */
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+            /* Reduced shadow */
         }
+
         #validation-code-input::-webkit-outer-spin-button,
         #validation-code-input::-webkit-inner-spin-button {
-            -webkit-appearance: none; /* Remove arrows for Chrome, Safari, Edge, Opera */
+            -webkit-appearance: none;
+            /* Remove arrows for Chrome, Safari, Edge, Opera */
             margin: 0;
         }
+
         .code-validation-section .btn {
-            padding: 10px 24px; /* Reduced padding */
-            font-size: 1.1rem; /* Reduced from 1.2rem */
-            min-width: 140px; /* Reduced */
-            line-height: 1.3; /* Adjusted */
+            padding: 10px 24px;
+            /* Reduced padding */
+            font-size: 1.1rem;
+            /* Reduced from 1.2rem */
+            min-width: 140px;
+            /* Reduced */
+            line-height: 1.3;
+            /* Adjusted */
             background: linear-gradient(135deg, #FF9C42 0%, #FFD700 100%);
-            box-shadow: 0 2px 6px rgba(255,156,66,0.2); /* Reduced shadow */
+            box-shadow: 0 2px 6px rgba(255, 156, 66, 0.2);
+            /* Reduced shadow */
             transition: all 0.3s ease;
             font-weight: 600;
         }
+
         .code-validation-section .btn:hover {
             transform: translateY(-1px);
-            box-shadow: 0 3px 10px rgba(255,156,66,0.3); /* Adjusted hover shadow */
+            box-shadow: 0 3px 10px rgba(255, 156, 66, 0.3);
+            /* Adjusted hover shadow */
         }
+
         #code-validation-status {
             display: block;
-            margin-top: 12px; /* Reduced from 15px */
-            font-size: 0.9rem; /* Reduced from 1rem */
-            min-height: 1.2em; 
-            color: #fff; /* Default color */
+            margin-top: 12px;
+            /* Reduced from 15px */
+            font-size: 0.9rem;
+            /* Reduced from 1rem */
+            min-height: 1.2em;
+            color: #fff;
+            /* Default color */
             font-weight: 500;
         }
+
         /* End Styles for Code Validation Section */
-        
+
         /* Tablet styles */
         @media (min-width: 601px) and (max-width: 1024px) {
             .stats-grid {
                 gap: 20px;
             }
-            
+
             .stat-card {
                 padding: 25px;
             }
-            
+
             .stat-number {
                 font-size: 2.5rem;
             }
-            
+
             .stat-label {
                 font-size: 1.1rem;
             }
         }
-        
+
         @media (max-width: 600px) {
             body {
-                padding: 10px; /* Reduced from 20px to give more room */
+                padding: 10px;
+                /* Reduced from 20px to give more room */
             }
-            
+
             .container {
-                padding: 0; /* Remove extra padding on mobile */
+                padding: 0;
+                /* Remove extra padding on mobile */
             }
-            
+
             h1 {
                 font-size: 2rem;
             }
-            
+
             .stats-grid {
                 grid-template-columns: 1fr 1fr;
                 gap: 10px;
             }
-            
+
             .stat-card {
                 padding: 15px 10px;
             }
-            
+
             .stat-number {
                 font-size: 1.4rem;
                 letter-spacing: 1px;
             }
-            
+
             .stat-label {
                 font-size: 0.85rem;
             }
-            
+
             .timestamp {
                 font-size: 0.75rem;
             }
-            
+
             .entry {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 10px;
             }
-            
+
             .entry-details {
                 text-align: right;
             }
-            
+
             #guest-search {
-                font-size: 16px; /* Prevent zoom on iOS */
+                font-size: 16px;
+                /* Prevent zoom on iOS */
             }
-            
+
             /* Ensure code validation input doesn't overflow */
             #validation-code-input {
-                max-width: 300px; /* Increased for 5 digits */
+                max-width: 300px;
+                /* Increased for 5 digits */
             }
-            
+
             /* Ensure table doesn't overflow */
             table {
-                font-size: 0.8rem; /* Slightly smaller on mobile */
+                font-size: 0.8rem;
+                /* Slightly smaller on mobile */
             }
-            
+
             /* QR Code responsive styles */
             #qr-code-tab img {
                 width: 280px !important;
             }
-            
+
             #qr-code-tab h3 {
                 font-size: 1.4rem !important;
             }
         }
-        
+
         /* Tablet QR code styles */
         @media (min-width: 601px) and (max-width: 1024px) {
             #qr-code-tab img {
@@ -510,22 +556,23 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1> ניהול כניסות - מסיבת גג</h1>
-        
+
         <div class="controls">
             <button class="btn" onclick="loadData()">🔄 רענן נתונים</button>
-            <button class="btn secondary" onclick="exportData()">📊 ייצא נתונים</button>
+            <button class="btn secondary" onclick="exportGuestsCSV()">⬇️ ייצוא רשימת אורחים (CSV)</button>
         </div>
-        
+
         <div class="stats-grid" id="stats">
             <div class="loading">
                 <div class="spinner"></div>
                 טוען נתונים...
             </div>
         </div>
-        
+
         <div class="tabs">
             <button class="tab" onclick="switchTab(this, 'scanner')">QR לכניסה</button>
             <button class="tab" onclick="switchTab(this, 'qr-code')">QR לתשלום</button>
@@ -534,21 +581,22 @@
             <button class="tab active" onclick="switchTab(this, 'guests')">רשימת אורחים</button>
             <button class="tab" onclick="switchTab(this, 'entries')">כניסות אחרונות</button>
         </div>
-        
+
         <div class="tab-content" id="token-validation-tab">
             <div class="code-validation-section">
                 <h3>אימות מהיר באמצעות טוקן</h3>
-                <input type="text" id="validation-code-input" placeholder="הכנס טוקן אימות" maxlength="32" style="direction: ltr;">
+                <input type="text" id="validation-code-input" placeholder="הכנס טוקן אימות" maxlength="32"
+                    style="direction: ltr;">
                 <button class="btn" onclick="validateByCode()">אשר טוקן</button>
                 <div id="code-validation-status"></div>
             </div>
         </div>
-        
+
         <div class="tab-content active" id="guests-tab">
             <div class="guests-search-header">
-                <input type="text" id="guest-search" placeholder="חיפוש לפי שם או טלפון..." 
-                       style="width: 100%; padding: 14px; border-radius: 8px; border: none; font-size: 1.3rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
-                       oninput="filterGuests()">
+                <input type="text" id="guest-search" placeholder="חיפוש לפי שם או טלפון..."
+                    style="width: 100%; padding: 14px; border-radius: 8px; border: none; font-size: 1.3rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
+                    oninput="filterGuests()">
             </div>
             <div class="guests-content-wrapper">
                 <div id="guests-section">
@@ -559,7 +607,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="tab-content" id="entries-tab">
             <div id="entries">
                 <div class="loading">
@@ -568,86 +616,91 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="tab-content" id="add-guest-tab">
             <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
                 <h3 style="color:#FFD700; margin-bottom:25px; text-align: center; font-size: 1.8rem;">הוסף אורח חדש</h3>
                 <form id="add-guest-form" style="display:flex; flex-direction: column; gap:20px;">
                     <div style="display: flex; flex-direction: column; gap: 8px;">
                         <label style="color: #FFD700; font-size: 1.1rem;">שם מלא</label>
-                        <input type="text" id="guest-name" placeholder="הכנס שם מלא" required 
-                               style="padding:12px; border-radius:8px; border:1px solid rgba(255,215,0,0.3); 
+                        <input type="text" id="guest-name" placeholder="הכנס שם מלא" required style="padding:12px; border-radius:8px; border:1px solid rgba(255,215,0,0.3); 
                                       background: rgba(0,0,0,0.3); color: white; font-size: 1.1rem;">
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 8px;">
                         <label style="color: #FFD700; font-size: 1.1rem;">מספר טלפון</label>
-                        <input type="text" id="guest-phone" placeholder="05xxxxxxxx" required pattern="05[0-9]{8}" 
-                               style="padding:12px; border-radius:8px; border:1px solid rgba(255,215,0,0.3); 
+                        <input type="text" id="guest-phone" placeholder="05xxxxxxxx" required pattern="05[0-9]{8}"
+                            style="padding:12px; border-radius:8px; border:1px solid rgba(255,215,0,0.3); 
                                       background: rgba(0,0,0,0.3); color: white; font-size: 1.1rem; direction: ltr;">
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 8px;">
                         <label style="color: #FFD700; font-size: 1.1rem;">מספר כרטיסים</label>
-                        <input type="number" id="guest-tickets" placeholder="מספר כרטיסים" required min="1" max="10" 
-                               style="padding:12px; border-radius:8px; border:1px solid rgba(255,215,0,0.3); 
+                        <input type="number" id="guest-tickets" placeholder="מספר כרטיסים" required min="1" max="10"
+                            style="padding:12px; border-radius:8px; border:1px solid rgba(255,215,0,0.3); 
                                       background: rgba(0,0,0,0.3); color: white; font-size: 1.1rem;">
                     </div>
-                    
 
-                    
+
+
                     <button type="submit" class="btn" style="padding: 14px 24px; font-size: 1.2rem; margin-top: 10px;">
                         הוסף אורח
                     </button>
                     <div id="add-guest-status" style="text-align: center; font-size: 1rem; min-height: 1.5em;"></div>
                 </form>
-                
+
             </div>
         </div>
-        
+
         <div class="tab-content" id="scanner-tab">
             <div style="max-width: 600px; margin: 0 auto; padding: 20px; text-align: center;">
                 <h3 style="color:#FFD700; margin-bottom:25px; text-align: center; font-size: 1.8rem;">סריקת QR קוד</h3>
-                
-                <div id="scanner-container" style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; margin-bottom: 20px;">
-                    <video id="scanner-video" autoplay playsinline style="width: 100%; max-width: 400px; height: 300px; border-radius: 10px; background: #000; display: none;"></video>
-                    
-                    <div id="scanner-placeholder" style="width: 100%; max-width: 400px; height: 300px; background: #333; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+
+                <div id="scanner-container"
+                    style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; margin-bottom: 20px;">
+                    <video id="scanner-video" autoplay playsinline
+                        style="width: 100%; max-width: 400px; height: 300px; border-radius: 10px; background: #000; display: none;"></video>
+
+                    <div id="scanner-placeholder"
+                        style="width: 100%; max-width: 400px; height: 300px; background: #333; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
                         <div style="text-align: center; color: #fff; opacity: 0.7;">
                             <div style="font-size: 3rem; margin-bottom: 10px;">📷</div>
                             <div>לחץ "התחל סריקה" להפעלת המצלמה</div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
                     <button id="start-scanner-btn" class="btn" onclick="startScanner()">התחל סריקה</button>
-                    <button id="stop-scanner-btn" class="btn secondary" onclick="stopScanner()" style="display: none;">עצור סריקה</button>
+                    <button id="stop-scanner-btn" class="btn secondary" onclick="stopScanner()"
+                        style="display: none;">עצור סריקה</button>
                 </div>
-                
+
                 <div id="scanner-status" style="margin-top: 15px; font-size: 1rem; min-height: 1.5em;"></div>
-                
+
 
             </div>
         </div>
-        
+
         <div class="tab-content" id="qr-code-tab">
             <div style="max-width: 600px; margin: 0 auto; padding: 20px; text-align: center;">
-                <h3 style="color:#FFD700; margin-bottom:25px; text-align: center; font-size: 1.8rem;">QR קוד לאורחים</h3>
-                
-                <div style="background: white; padding: 20px; border-radius: 15px; margin-bottom: 25px; display: inline-block;">
-                    <img src="bit-qr.png" alt="QR Code for Guest Entry" 
-                         style="max-width: 100%; height: auto; width: 350px; display: block;">
+                <h3 style="color:#FFD700; margin-bottom:25px; text-align: center; font-size: 1.8rem;">QR קוד לאורחים
+                </h3>
+
+                <div
+                    style="background: white; padding: 20px; border-radius: 15px; margin-bottom: 25px; display: inline-block;">
+                    <img src="bit-qr.png" alt="QR Code for Guest Entry"
+                        style="max-width: 100%; height: auto; width: 350px; display: block;">
                 </div>
             </div>
         </div>
     </div>
-    
+
     <script>
         let currentStats = null;
-        
+
         // Safe date formatting function
         function formatDate(timestamp) {
             if (!timestamp) return 'לא זמין';
-            
+
             try {
                 const date = new Date(timestamp);
                 if (isNaN(date.getTime())) {
@@ -665,7 +718,7 @@
                 return 'שגיאה בתאריך';
             }
         }
-        
+
         async function loadData() {
             console.log('🔍 Starting loadData...');
             try {
@@ -676,10 +729,10 @@
                 const stats = await statsResponse.json();
                 console.log('📊 Stats data:', stats);
                 currentStats = stats;
-                
+
                 const validationRate = stats.totalGuests > 0 ? (stats.validatedCount / stats.totalGuests * 100).toFixed(1) : 0;
                 const ticketUsageRate = stats.totalTickets > 0 ? (stats.validatedTickets / stats.totalTickets * 100).toFixed(1) : 0;
-                
+
                 console.log('📊 Updating stats HTML...');
                 document.getElementById('stats').innerHTML = `
                     <div class="stat-card">
@@ -699,29 +752,29 @@
                         <div class="timestamp">${ticketUsageRate}% נוצלו</div>
                     </div>
                 `;
-                
+
                 // Load entries
                 console.log('📋 Loading entries...');
                 await loadEntries();
                 console.log('👥 Loading guests...');
                 await loadGuests();
-                
+
                 console.log('✅ loadData completed successfully!');
-                
+
             } catch (error) {
                 console.error('❌ Error in loadData:', error);
                 document.getElementById('stats').innerHTML = '<div class="loading">❌ שגיאה בטעינת נתונים</div>';
             }
         }
-        
+
         async function loadEntries() {
             try {
                 const entriesResponse = await fetch('/api/validated');
                 const entries = await entriesResponse.json();
-                
+
                 console.log('Entries received:', entries); // Debug log
-                
-                const entriesHtml = entries.length > 0 
+
+                const entriesHtml = entries.length > 0
                     ? entries.map(entry => `
                         <div class="entry">
                             <div class="entry-info">
@@ -737,15 +790,15 @@
                         </div>
                     `).join('')
                     : '<div style="text-align: center; padding: 40px; opacity: 0.6;">😴 אין כניסות עדיין</div>';
-                
+
                 document.getElementById('entries').innerHTML = entriesHtml;
-                
+
             } catch (error) {
                 console.error('Error loading entries:', error);
                 document.getElementById('entries').innerHTML = '<div class="loading">❌ שגיאה בטעינת כניסות</div>';
             }
         }
-        
+
         async function loadGuests() {
             const section = document.getElementById('guests-section');
             try {
@@ -763,10 +816,10 @@
                 section.innerHTML = '<div class="loading">שגיאה בטעינת אורחים</div>';
             }
         }
-        
+
         function displayGuests(guests) {
             const section = document.getElementById('guests-section');
-            
+
             // Create table directly without wrapper for better sticky support
             const table = document.createElement('table');
             table.style.width = '100%';
@@ -776,11 +829,11 @@
             table.style.borderCollapse = 'separate';
             table.style.borderSpacing = '0';
             table.style.tableLayout = 'fixed'; // Added for better column control
-            
+
             const isMobile = window.innerWidth <= 600;
             const isTablet = window.innerWidth > 600 && window.innerWidth <= 1024;
             const isSmallScreen = isMobile || isTablet;
-            
+
             table.innerHTML = `
                 <thead style="position: sticky; top: 0; z-index: 10;">
                     <tr style="background:#000;color:#FFD700;">
@@ -803,10 +856,10 @@
                     `).join('')}
                 </tbody>
             `;
-            
+
             section.innerHTML = '';
             section.appendChild(table);
-            
+
             // Update guest count
             const countInfo = document.createElement('div');
             countInfo.style.marginTop = '10px';
@@ -815,7 +868,7 @@
             countInfo.style.fontSize = isMobile ? '0.8rem' : '0.9rem';
             countInfo.innerHTML = `מציג ${guests.length} אורחים`;
             section.appendChild(countInfo);
-            
+
             // Add scroll hint on mobile
             if (isMobile && guests.length > 0) {
                 const scrollHint = document.createElement('div');
@@ -827,27 +880,27 @@
                 section.appendChild(scrollHint);
             }
         }
-        
+
         function filterGuests() {
             const searchTerm = document.getElementById('guest-search').value.toLowerCase();
             if (!window.allGuests) return;
-            
-            const filtered = window.allGuests.filter(guest => 
-                guest.name.toLowerCase().includes(searchTerm) || 
+
+            const filtered = window.allGuests.filter(guest =>
+                guest.name.toLowerCase().includes(searchTerm) ||
                 (guest.realPhone || guest.phone).includes(searchTerm)
             );
-            
+
             displayGuests(filtered);
         }
-        
+
         function switchTab(clickedTab, tabName) {
             console.log('switchTab called with tabName:', tabName);
             console.log('clickedTab element:', clickedTab);
-            
+
             // Update tab buttons
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             clickedTab.classList.add('active');
-            
+
             // Update tab content
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             const targetContent = document.getElementById(tabName + '-tab');
@@ -857,36 +910,56 @@
             } else {
                 console.error('Tab content not found for:', tabName + '-tab');
             }
-            
+
             // Remove codeValidationSection display logic (no longer needed)
             // Stop scanner when switching away from scanner tab
             if (tabName !== 'scanner' && scanning) {
                 stopScanner();
             }
         }
-        
-        function exportData() {
-            if (!currentStats) return;
-            
-            const data = {
-                timestamp: new Date().toISOString(),
-                stats: currentStats,
-                exportedBy: 'admin'
-            };
-            
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `party-stats-${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+
+        function toCSV(arr) {
+            if (!arr.length) return '';
+            const keys = Object.keys(arr[0]);
+            const header = keys.join(',');
+            const rows = arr.map(obj => keys.map(k => '"' + String(obj[k] ?? '').replace(/"/g, '""') + '"').join(','));
+            return [header, ...rows].join('\n');
         }
-        
+
+        async function exportGuestsCSV() {
+            try {
+                const res = await fetch('/api/guests');
+                const guests = await res.json();
+                if (!Array.isArray(guests) || guests.length === 0) {
+                    alert('אין אורחים לייצוא');
+                    return;
+                }
+                // Only export relevant fields
+                const csvData = guests.map(g => ({
+                    name: g.name,
+                    phone: g.realPhone || g.phone,
+                    tickets: g.tickets,
+                    validated: g.validated ? 'כן' : 'לא',
+                    entered: g.entered ? 'כן' : 'לא',
+                    newsletter: g.newsletter ? 'כן' : 'לא'
+                }));
+                const csv = toCSV(csvData);
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `guests-list-${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch (err) {
+                alert('שגיאה בייצוא רשימת אורחים');
+            }
+        }
+
         // Add guest form logic
-        document.getElementById('add-guest-form').addEventListener('submit', async function(e) {
+        document.getElementById('add-guest-form').addEventListener('submit', async function (e) {
             e.preventDefault();
             const name = document.getElementById('guest-name').value.trim();
             const phone = document.getElementById('guest-phone').value.trim();
@@ -923,7 +996,7 @@
                 status.style.color = 'red';
             }
         });
-        
+
         // Handle URL fragment for guest validation
         function handleUrlFragment() {
             const hash = window.location.hash;
@@ -931,10 +1004,10 @@
                 try {
                     const encodedData = hash.substring('#validate-guest='.length);
                     const guestData = JSON.parse(decodeURIComponent(encodedData));
-                    
+
                     // Show guest popup
                     showGuestDetails(guestData);
-                    
+
                     // Clear the hash
                     history.replaceState(null, null, ' ');
                 } catch (error) {
@@ -942,11 +1015,11 @@
                 }
             }
         }
-        
+
         // Function to mark guest as entered via API
         async function markGuestAsEntered(phone) {
             if (!phone) return;
-            
+
             try {
                 // Find the guest's token from the current data
                 let token = null;
@@ -954,12 +1027,12 @@
                     const guest = window.allGuests.find(g => (g.realPhone || g.phone) === phone);
                     token = guest ? guest.uniqueToken : null;
                 }
-                
+
                 if (!token) {
                     alert('לא ניתן למצוא טוקן עבור אורח זה');
                     return;
                 }
-                
+
                 const response = await fetch('/api/validate-code', {
                     method: 'POST',
                     headers: {
@@ -967,9 +1040,9 @@
                     },
                     body: JSON.stringify({ code: token })
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     alert(`אורח ${result.guestName} אומת בהצלחה לכניסה!`);
                     closeModal();
@@ -982,14 +1055,14 @@
                 alert('שגיאה בחיבור לשרת');
             }
         }
-        
+
         // Load data on page load
         loadData();
-        
+
         // Handle URL fragments on page load and navigation
         window.addEventListener('load', handleUrlFragment);
         window.addEventListener('hashchange', handleUrlFragment);
-        
+
         // Handle window resize for responsive table
         let resizeTimeout;
         window.addEventListener('resize', () => {
@@ -1000,18 +1073,18 @@
                 }
             }, 250);
         });
-        
+
         // Auto-refresh every 30 seconds
         setInterval(loadData, 30000);
-        
+
         // Add last updated timestamp
         setInterval(() => {
             const now = new Date().toLocaleTimeString('he-IL');
             document.title = `מסיבת גג - ניהול כניסות (${now})`;
         }, 1000);
-        
+
         let selectedGuest = null;
-        
+
         function showGuestDetails(guest) {
             selectedGuest = guest;
             const modal = document.createElement('div');
@@ -1019,7 +1092,7 @@
             modal.onclick = (e) => {
                 if (e.target === modal) closeModal();
             };
-            
+
             // Determine status texts and colors
             const phoneValidatedText = guest.validated ? `✅ כן (${formatDate(guest.phoneValidationTimestamp)})` : '❌ לא';
             const entryStatusText = guest.entered ? `✅ כן (${formatDate(guest.entryTimestamp)})` : '❌ לא';
@@ -1077,15 +1150,15 @@
                     </div>
                 </div>
             `;
-            
+
             document.body.appendChild(modal);
         }
-        
+
         function closeModal() {
             const modal = document.querySelector('.modal-overlay');
             if (modal) modal.remove();
         }
-        
+
         async function validateByCode() {
             const codeInput = document.getElementById('validation-code-input');
             const code = codeInput.value.trim();
@@ -1137,110 +1210,110 @@
                 statusEl.style.color = 'red';
             }
         }
-        
+
         // QR Scanner functionality
         let qrScanner = null;
-        
+
         async function startScanner() {
             const video = document.getElementById('scanner-video');
             const placeholder = document.getElementById('scanner-placeholder');
             const startBtn = document.getElementById('start-scanner-btn');
             const stopBtn = document.getElementById('stop-scanner-btn');
             const statusEl = document.getElementById('scanner-status');
-            
+
             try {
                 statusEl.textContent = 'מבקש גישה למצלמה...';
                 statusEl.style.color = '#FFD700';
-                
+
                 // Check if BarcodeDetector is available
                 if ('BarcodeDetector' in window) {
                     console.log('BarcodeDetector available');
-                    
+
                     // Request camera access
                     const stream = await navigator.mediaDevices.getUserMedia({
-                        video: { 
+                        video: {
                             facingMode: 'environment',
                             width: { ideal: 640 },
                             height: { ideal: 480 }
                         }
                     });
-                    
+
                     video.srcObject = stream;
                     video.play();
-                    
+
                     // Show video, hide placeholder
                     placeholder.style.display = 'none';
                     video.style.display = 'block';
-                    
+
                     // Update buttons
                     startBtn.style.display = 'none';
                     stopBtn.style.display = 'inline-block';
-                    
+
                     statusEl.textContent = 'מצלמה פעילה - כוון QR קוד למרכז המסך';
                     statusEl.style.color = '#4CAF50';
-                    
+
                     // Start scanning
                     scanForQRCodes(video, statusEl);
-                    
+
                 } else {
                     throw new Error('BarcodeDetector not supported in this browser');
                 }
-                
+
             } catch (error) {
                 console.error('Scanner error:', error);
                 statusEl.textContent = `שגיאה: ${error.message === 'Permission denied' ? 'נדחתה גישה למצלמה' : 'לא ניתן להפעיל מצלמה'}`;
                 statusEl.style.color = 'red';
             }
         }
-        
+
         function stopScanner() {
             const video = document.getElementById('scanner-video');
             const placeholder = document.getElementById('scanner-placeholder');
             const startBtn = document.getElementById('start-scanner-btn');
             const stopBtn = document.getElementById('stop-scanner-btn');
             const statusEl = document.getElementById('scanner-status');
-            
+
             // Stop video stream
             if (video.srcObject) {
                 video.srcObject.getTracks().forEach(track => track.stop());
                 video.srcObject = null;
             }
-            
+
             // Show placeholder, hide video
             video.style.display = 'none';
             placeholder.style.display = 'flex';
-            
+
             // Update buttons
             stopBtn.style.display = 'none';
             startBtn.style.display = 'inline-block';
-            
+
             statusEl.textContent = '';
         }
-        
+
         let scanning = false;
-        
+
         async function scanForQRCodes(video, statusEl) {
             if (scanning) return;
             scanning = true;
-            
+
             const barcodeDetector = new BarcodeDetector({ formats: ['qr_code'] });
-            
+
             async function scan() {
                 if (!scanning || !video.srcObject) return;
-                
+
                 try {
                     const barcodes = await barcodeDetector.detect(video);
-                    
+
                     if (barcodes.length > 0) {
                         const qrCode = barcodes[0];
                         console.log('QR Code detected:', qrCode.rawValue);
-                        
+
                         // Check if it's a validation URL
                         if (qrCode.rawValue.includes('/admin/validate/')) {
                             scanning = false; // Stop scanning
                             statusEl.textContent = 'QR קוד זוהה! מעבר לאימות...';
                             statusEl.style.color = '#4CAF50';
-                            
+
                             // Navigate to the validation URL
                             window.location.href = qrCode.rawValue;
                             return;
@@ -1249,15 +1322,16 @@
                 } catch (error) {
                     console.error('QR detection error:', error);
                 }
-                
+
                 // Continue scanning
                 if (scanning) {
                     requestAnimationFrame(scan);
                 }
             }
-            
+
             scan();
         }
     </script>
 </body>
+
 </html>
