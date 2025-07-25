@@ -4,9 +4,6 @@ const urlsToCache = [
   '/admin',
   '/admin.html',
   'icon.svg',
-  'icon-180.png',
-  'icon-192.png',
-  'icon-512.png',
   'admin-manifest.json'
 ];
 
