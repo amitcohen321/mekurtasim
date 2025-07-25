@@ -14,14 +14,22 @@ class QRScanner {
         this.onScanCallback = onScan;
         
         try {
-            // Request camera access
-            this.stream = await navigator.mediaDevices.getUserMedia({
+            // Check if mediaDevices is supported
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('Camera access not supported by this browser');
+            }
+
+            // Request camera access with iOS Safari compatibility
+            const constraints = {
                 video: { 
                     facingMode: 'environment', // Use back camera if available
-                    width: { ideal: 640 },
-                    height: { ideal: 480 }
-                }
-            });
+                    width: { ideal: 640, max: 1280 },
+                    height: { ideal: 480, max: 720 }
+                },
+                audio: false
+            };
+
+            this.stream = await navigator.mediaDevices.getUserMedia(constraints);
             
             this.video.srcObject = this.stream;
             this.video.play();
@@ -36,7 +44,19 @@ class QRScanner {
             return true;
         } catch (error) {
             console.error('Error accessing camera:', error);
-            throw error;
+            
+            // Provide more specific error messages for iOS Safari
+            if (error.name === 'NotAllowedError') {
+                throw new Error('Camera access denied. Please allow camera access in Safari settings and try again.');
+            } else if (error.name === 'NotFoundError') {
+                throw new Error('No camera found on this device.');
+            } else if (error.name === 'NotSupportedError') {
+                throw new Error('Camera access not supported in this browser.');
+            } else if (error.name === 'NotReadableError') {
+                throw new Error('Camera is being used by another application.');
+            } else {
+                throw new Error(`Camera error: ${error.message}`);
+            }
         }
     }
 

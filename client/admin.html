@@ -13,12 +13,18 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#FF9C42">
     <meta name="msapplication-TileColor" content="#FF9C42">
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="admin-manifest.json">
+    
+    <!-- Canonical URL for proper indexing -->
+    <link rel="canonical" href="/admin">
 
-    <!-- Icons -->
-    <link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
+    <!-- Icons with proper sizes -->
+    <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
     <link rel="icon" type="image/png" sizes="32x32" href="icon-192.png">
     <link rel="icon" type="image/png" sizes="16x16" href="icon-192.png">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
 
     <style>
         * {
@@ -695,6 +701,19 @@
     </div>
 
     <script>
+        // Register service worker for PWA functionality
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/admin-sw.js')
+                    .then(registration => {
+                        console.log('Admin SW registered: ', registration);
+                    })
+                    .catch(registrationError => {
+                        console.log('Admin SW registration failed: ', registrationError);
+                    });
+            });
+        }
+
         let currentStats = null;
 
         // Safe date formatting function
@@ -1211,6 +1230,81 @@
             }
         }
 
+        // Function to validate token directly from QR scanner
+        async function validateTokenDirectly(token, statusEl) {
+            try {
+                statusEl.textContent = 'מאמת טוקן...';
+                statusEl.style.color = '#FFD700';
+
+                const response = await fetch('/api/validate-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ code: token })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // Success - show guest info and play success sound/vibration
+                    statusEl.textContent = `✅ ${result.guestName} אומת בהצלחה! ${result.ticketsValidated || ''} כרטיס(ים)`;
+                    statusEl.style.color = '#4CAF50';
+                    statusEl.style.fontSize = '1.1rem';
+                    statusEl.style.fontWeight = 'bold';
+                    
+                    // Vibration feedback
+                    if (navigator.vibrate) {
+                        navigator.vibrate([100, 50, 100]);
+                    }
+                    
+                    // Refresh data to update stats and guest list
+                    await loadData();
+                    
+                    // Auto-resume scanning after 3 seconds
+                    setTimeout(() => {
+                        statusEl.textContent = 'מצלמה פעילה - כוון QR קוד למרכז המסך';
+                        statusEl.style.color = '#4CAF50';
+                        statusEl.style.fontSize = '1rem';
+                        statusEl.style.fontWeight = 'normal';
+                        scanning = true;
+                        scanForQRCodes(document.getElementById('scanner-video'), statusEl);
+                    }, 3000);
+                    
+                } else {
+                    // Error - show error message
+                    statusEl.textContent = `❌ ${result.message || 'טוקן לא תקין'}`;
+                    statusEl.style.color = '#ff5252';
+                    
+                    // Error vibration
+                    if (navigator.vibrate) {
+                        navigator.vibrate([200, 100, 200]);
+                    }
+                    
+                    // Resume scanning after error
+                    setTimeout(() => {
+                        statusEl.textContent = 'מצלמה פעילה - כוון QR קוד למרכז המסך';
+                        statusEl.style.color = '#4CAF50';
+                        scanning = true;
+                        scanForQRCodes(document.getElementById('scanner-video'), statusEl);
+                    }, 2000);
+                }
+                
+            } catch (error) {
+                console.error('Error validating token:', error);
+                statusEl.textContent = '❌ שגיאה בחיבור לשרת';
+                statusEl.style.color = '#ff5252';
+                
+                // Resume scanning after error
+                setTimeout(() => {
+                    statusEl.textContent = 'מצלמה פעילה - כוון QR קוד למרכז המסך';
+                    statusEl.style.color = '#4CAF50';
+                    scanning = true;
+                    scanForQRCodes(document.getElementById('scanner-video'), statusEl);
+                }, 2000);
+            }
+        }
+
         // QR Scanner functionality
         let qrScanner = null;
 
@@ -1310,12 +1404,23 @@
 
                         // Check if it's a validation URL
                         if (qrCode.rawValue.includes('/admin/validate/')) {
-                            scanning = false; // Stop scanning
-                            statusEl.textContent = 'QR קוד זוהה! מעבר לאימות...';
+                            scanning = false; // Stop scanning temporarily
+                            statusEl.textContent = 'QR קוד זוהה! מאמת...';
                             statusEl.style.color = '#4CAF50';
 
-                            // Navigate to the validation URL
-                            window.location.href = qrCode.rawValue;
+                            // Extract token from URL and validate directly
+                            const token = qrCode.rawValue.split('/admin/validate/')[1];
+                            if (token) {
+                                await validateTokenDirectly(token, statusEl);
+                            } else {
+                                statusEl.textContent = 'שגיאה: לא ניתן לחלץ טוקן מה-QR';
+                                statusEl.style.color = 'red';
+                                // Resume scanning after error
+                                setTimeout(() => {
+                                    scanning = true;
+                                    scan();
+                                }, 2000);
+                            }
                             return;
                         }
                     }
