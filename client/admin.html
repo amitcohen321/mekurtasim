@@ -577,7 +577,6 @@
         </div>
 
         <div class="tabs">
-            <button class="tab" onclick="switchTab(this, 'scanner')">QR לכניסה</button>
             <button class="tab" onclick="switchTab(this, 'qr-code')">QR לתשלום</button>
             <!-- <button class="tab" onclick="switchTab(this, 'token-validation')">אימות טוקן</button> -->
             <button class="tab" onclick="switchTab(this, 'add-guest')">הוסף אורח</button>
@@ -653,7 +652,7 @@
             </div>
         </div>
 
-        <div class="tab-content" id="scanner-tab">
+        <div class="tab-content" id="scanner-tab" style="display:none">
             <div style="max-width: 600px; margin: 0 auto; padding: 20px; text-align: center;">
                 <h3 style="color:#FFD700; margin-bottom:25px; text-align: center; font-size: 1.8rem;">סריקת QR קוד</h3>
 
@@ -1355,7 +1354,7 @@
             } catch (error) {
                 console.error('Scanner error:', error);
                 let errorMessage = 'לא ניתן להפעיל מצלמה';
-                
+
                 if (error.name === 'NotAllowedError') {
                     errorMessage = 'נדחתה גישה למצלמה. אנא אפשר גישה למצלמה בהגדרות הדפדפן';
                 } else if (error.name === 'NotFoundError') {
@@ -1365,7 +1364,7 @@
                 } else if (error.name === 'NotReadableError') {
                     errorMessage = 'המצלמה בשימוש על ידי יישום אחר';
                 }
-                
+
                 statusEl.textContent = `שגיאה: ${errorMessage}`;
                 statusEl.style.color = 'red';
             }
@@ -1451,15 +1450,15 @@
         // Manual scanning method for iOS (fallback when BarcodeDetector is not available)
         async function scanWithManualMethod(video, statusEl) {
             scanning = true;
-            
+
             // Create canvas for image processing
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
-            
+
             // Show instructions for manual scanning
             statusEl.innerHTML = 'מצלמה פעילה - כוון QR קוד למרכז המסך<br><small style="opacity: 0.7;">הקלד את הטוקן באופן ידני או השתמש בכפתור "אימות טוקן"</small>';
             statusEl.style.color = '#4CAF50';
-            
+
             // For iOS, we'll provide an alternative method
             // Add a button for manual token input within the scanner
             const manualInputContainer = document.createElement('div');
@@ -1468,24 +1467,24 @@
             manualInputContainer.style.background = 'rgba(255, 156, 66, 0.1)';
             manualInputContainer.style.borderRadius = '8px';
             manualInputContainer.style.border = '1px solid rgba(255, 215, 0, 0.3)';
-            
+
             manualInputContainer.innerHTML = `
                 <div style="color: #FFD700; margin-bottom: 10px; font-size: 0.9rem;">הזנה ידנית עבור iOS:</div>
                 <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center;">
-                    <input type="text" id="manual-token-input" placeholder="הכנס טוקן" maxlength="32" 
-                           style="padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,215,0,0.4); 
-                                  background: rgba(0,0,0,0.4); color: #FFD700; font-family: monospace; 
+                    <input type="text" id="manual-token-input" placeholder="הכנס טוקן" maxlength="32"
+                           style="padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,215,0,0.4);
+                                  background: rgba(0,0,0,0.4); color: #FFD700; font-family: monospace;
                                   font-size: 0.9rem; min-width: 200px; direction: ltr; text-align: center;">
                     <button onclick="validateManualToken()" class="btn" style="padding: 8px 16px; font-size: 0.9rem;">אמת</button>
                 </div>
             `;
-            
+
             const scannerContainer = document.getElementById('scanner-container');
             if (!document.getElementById('manual-input-container')) {
                 manualInputContainer.id = 'manual-input-container';
                 scannerContainer.appendChild(manualInputContainer);
             }
-            
+
             // Simple periodic check (since we can't do real QR scanning on iOS)
             const checkInterval = setInterval(() => {
                 if (!scanning) {
@@ -1504,19 +1503,19 @@
             const input = document.getElementById('manual-token-input');
             const token = input.value.trim();
             const statusEl = document.getElementById('scanner-status');
-            
+
             if (!token) {
                 statusEl.textContent = 'נא להזין טוקן';
                 statusEl.style.color = 'red';
                 return;
             }
-            
+
             if (!/^[a-f0-9]+$/i.test(token) || token.length !== 32) {
                 statusEl.textContent = 'טוקן לא תקין - חייב להיות 32 תווים hex';
                 statusEl.style.color = 'red';
                 return;
             }
-            
+
             // Clear input and validate
             input.value = '';
             await validateTokenDirectly(token, statusEl);
