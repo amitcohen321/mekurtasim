@@ -16,24 +16,24 @@ const { guestsByPhone } = require('./guests.js');
 // In-memory cache for validated entries
 const validatedEntries = new Map();
 
-// Function to generate unique URL-safe token
-function generateUniqueToken() {
-    let token;
+// Function to generate unique 4-digit code
+function generateUniqueCode() {
+    let code;
     let attempts = 0;
     
     do {
-        // Generate 32-character hex token
-        token = crypto.randomBytes(16).toString('hex');
+        // Generate 4-digit code
+        code = Math.floor(1000 + Math.random() * 9000).toString();
         attempts++;
         // Prevent infinite loop
         if (attempts > 1000) {
-            // Fallback: use timestamp-based token
-            token = crypto.createHash('sha256').update(Date.now().toString()).digest('hex').substring(0, 32);
+            // Fallback: use timestamp-based code
+            code = (Date.now() % 9000 + 1000).toString();
             break;
         }
-    } while (Array.from(validatedEntries.values()).some(entry => entry.uniqueToken === token));
+    } while (Array.from(validatedEntries.values()).some(entry => entry.entryCode === code));
     
-    return token;
+    return code;
 }
 
 // Middleware
@@ -111,7 +111,7 @@ app.post('/api/validate', (req, res) => {
             message: 'מספר זה כבר אומת בעבר',
             validatedAt: entry.phoneValidationTimestamp,
             validatedBy: entry.name,
-            uniqueToken: entry.uniqueToken
+            entryCode: entry.entryCode
         });
     }
     
@@ -125,7 +125,7 @@ app.post('/api/validate', (req, res) => {
             tickets: guest.tickets,
             phoneValidationTimestamp: new Date().toISOString(), // Renamed for clarity
             ip: req.ip,
-            uniqueToken: generateUniqueToken(),
+            entryCode: generateUniqueCode(),
             entered: false,                 // Tracks if guest has actually entered
             entryTimestamp: null,           // Timestamp for actual entry
             enteredBy: null,                // Method/admin who confirmed entry
@@ -137,8 +137,7 @@ app.post('/api/validate', (req, res) => {
             guest: {
                 name: guest.name,
                 tickets: guest.tickets,
-                uniqueToken: validatedEntries.get(cleanedPhone).uniqueToken,
-                validationUrl: `${req.protocol}://${req.get('host')}/admin/validate/${validatedEntries.get(cleanedPhone).uniqueToken}`
+                entryCode: validatedEntries.get(cleanedPhone).entryCode
             }
         });
     }
@@ -187,7 +186,7 @@ app.get('/api/guests', requireAdminCookie, (req, res) => {
             tickets: guest.tickets,
             validated: validated, // True if phone was validated
             phoneValidationTimestamp: validationData ? validationData.phoneValidationTimestamp : null,
-            uniqueToken: validationData ? validationData.uniqueToken : null,
+            entryCode: validationData ? validationData.entryCode : null,
             entered: validationData ? validationData.entered : false,
             entryTimestamp: validationData ? validationData.entryTimestamp : null,
             enteredBy: validationData ? validationData.enteredBy : null,
@@ -221,7 +220,7 @@ app.post('/api/guests', requireAdminCookie, (req, res) => {
             tickets: tickets,
             phoneValidationTimestamp: new Date().toISOString(),
             ip: 'admin-added',
-            uniqueToken: generateUniqueToken(),
+            entryCode: generateUniqueCode(),
             entered: false,
             entryTimestamp: null,
             enteredBy: null,
@@ -266,11 +265,16 @@ app.post('/api/validate-code', (req, res) => {
         return res.status(400).json({ success: false, message: 'Code is required.' });
     }
 
+    // Validate 4-digit code format
+    if (!/^\d{4}$/.test(code)) {
+        return res.status(400).json({ success: false, message: 'Code must be exactly 4 digits.' });
+    }
+
     let foundEntry = null;
     let guestPhoneKey = null;
 
     for (const [phone, entryData] of validatedEntries.entries()) {
-        if (entryData.uniqueToken === code) {
+        if (entryData.entryCode === code) {
             foundEntry = entryData;
             guestPhoneKey = phone;
             break;
@@ -302,20 +306,20 @@ app.post('/api/validate-code', (req, res) => {
     }
 });
 
-// New QR code validation endpoint - redirects to admin with guest popup
-app.get('/admin/validate/:token', requireAdminCookie, (req, res) => {
-    const { token } = req.params;
+// 4-digit code validation endpoint - redirects to admin with guest popup
+app.get('/admin/validate/:code', requireAdminCookie, (req, res) => {
+    const { code } = req.params;
     
-    if (!token) {
-        return res.status(400).send('Token is required');
+    if (!code || !/^\d{4}$/.test(code)) {
+        return res.status(400).send('Invalid code format - must be 4 digits');
     }
 
     let foundEntry = null;
     let guestPhoneKey = null;
 
-    // Find the guest by token
+    // Find the guest by code
     for (const [phone, entryData] of validatedEntries.entries()) {
-        if (entryData.uniqueToken === token) {
+        if (entryData.entryCode === code) {
             foundEntry = entryData;
             guestPhoneKey = phone;
             break;
@@ -338,7 +342,7 @@ app.get('/admin/validate/:token', requireAdminCookie, (req, res) => {
             <body>
                 <div class="error">
                     <h2>❌ קוד לא תקין</h2>
-                    <p>הקוד שסרקת אינו תקין או פג תוקפו</p>
+                    <p>הקוד שהזנת אינו תקין או פג תוקפו</p>
                 </div>
             </body>
             </html>
@@ -353,7 +357,7 @@ app.get('/admin/validate/:token', requireAdminCookie, (req, res) => {
         tickets: foundEntry.tickets,
         validated: true,
         phoneValidationTimestamp: foundEntry.phoneValidationTimestamp,
-        uniqueToken: foundEntry.uniqueToken,
+        entryCode: foundEntry.entryCode,
         entered: foundEntry.entered,
         entryTimestamp: foundEntry.entryTimestamp,
         enteredBy: foundEntry.enteredBy
