@@ -2,6 +2,13 @@
 const DOOR_CODE = '1909#';
 const API_URL = window.location.origin + '/api';
 
+// Back button functionality
+function goBack() {
+    // Get the base domain (protocol + hostname + port if any)
+    const baseUrl = window.location.protocol + '//' + window.location.host;
+    window.location.href = baseUrl;
+}
+
 // DOM Elements
 const form = document.getElementById('gate-form');
 const phoneInput = document.getElementById('phone-input');
@@ -148,11 +155,14 @@ function showFailure() {
     resultDiv.className = 'result fail';
     resultDiv.innerHTML = `
         <div style="font-size: 1.1rem; margin-bottom: 8px;">
-            ❌ מצטערים, אינך ברשימת האורחים
+            ❌ מצטערים, אינך ברשימת האורחי
         </div>
         <a href="https://wa.me/972544491343?text=שלום, אני לא נמצא ברשימת האורחים למסיבת הגג. האם יש אפשרות להצטרף?" target="_blank" class="paybox-btn" style="background: #81C784; margin-top: 8px; display: block; text-align: center;">
             📲 פנייה למנהל בוואטסאפ
         </a>
+        <button onclick="goBack()" class="back-btn" style="background: #FF9C42; margin-top: 12px; display: block; width: 100%; padding: 12px; border: none; border-radius: 8px; color: white; font-size: 1rem; cursor: pointer; font-family: inherit;">
+            ← חזור לדף הבית
+        </button>
     `;
 
     // רטט למכשירים ניידים
@@ -414,6 +424,9 @@ function showAlreadyValidated(data) {
         <a href="https://wa.me/972544491343?text=שלום, המספר שלי כבר אומת אבל אני צריך עזרה" target="_blank" class="paybox-btn" style="background: #81C784; margin-top: 12px; display: block; text-align: center;">
             📲 פנייה למנהל בוואטסאפ
         </a>
+        <button onclick="goBack()" class="back-btn" style="background: #FF9C42; margin-top: 12px; display: block; width: 100%; padding: 12px; border: none; border-radius: 8px; color: white; font-size: 1rem; cursor: pointer; font-family: inherit;">
+            ← חזור לדף הבית
+        </button>
     `;
 
     if (navigator.vibrate) {
