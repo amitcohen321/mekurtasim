@@ -834,12 +834,28 @@
                 </thead>
                 <tbody>
                     ${guests.map((g, index) => `
-                        <tr class="guest-row" style="cursor: pointer; ${index % 2 === 0 ? 'background: rgba(255,255,255,0.02);' : ''}" onclick='showGuestDetails(${JSON.stringify(g).replace(/'/g, "&#39;")})'>
+                        <tr class="guest-row" style="cursor: pointer; ${index % 2 === 0 ? 'background: rgba(255,255,255,0.02);' : ''}" onclick='if(event.target.tagName !== "BUTTON") showGuestDetails(${JSON.stringify(g).replace(/'/g, "&#39;")})'>
                             <td style="padding:${isMobile ? '14px 8px' : '14px'}; font-size: ${isMobile ? '1rem' : '0.9rem'}; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.1);">${g.name}</td>
                             <td style="padding:${isMobile ? '14px 8px' : '14px'}; direction: ltr; font-size: ${isMobile ? '1rem' : '0.9rem'}; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">${g.realPhone || g.phone}</td>
                             <td style="padding:${isMobile ? '14px 8px' : '14px'}; font-size: ${isMobile ? '1rem' : '0.9rem'}; font-family: monospace; direction: ltr; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); color: #FFD700; font-weight: bold;">${g.entryCode || '-'}</td>
-                            <td style="padding:${isMobile ? '14px 8px' : '14px'}; font-size: ${isMobile ? '1rem' : '0.9rem'}; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">${g.validated ? '<span style="color: #4CAF50;">✓</span>' : '<span style="color: #999;">-</span>'}</td>
-                            <td style="padding:${isMobile ? '14px 8px' : '14px'}; font-size: ${isMobile ? '1rem' : '0.9rem'}; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">${g.entered ? '<span style="color: #4CAF50;">✓</span>' : '<span style="color: #999;">-</span>'}</td>
+                            <td style="padding:${isMobile ? '14px 8px' : '14px'}; font-size: ${isMobile ? '1rem' : '0.9rem'}; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <button onclick='toggleGuestValidation(${JSON.stringify(g).replace(/'/g, "&#39;")}, event)' 
+                                        style="background: ${g.validated ? '#4CAF50' : '#666'}; color: white; border: none; border-radius: 4px; padding: ${isMobile ? '8px 10px' : '6px 12px'}; cursor: pointer; font-size: ${isMobile ? '0.9rem' : '0.8rem'}; min-width: ${isMobile ? '44px' : '40px'}; height: ${isMobile ? '44px' : '36px'}; transition: background 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); touch-action: manipulation;"
+                                        onmouseover="this.style.transform='scale(1.05)'" 
+                                        onmouseout="this.style.transform='scale(1)'"
+                                        title="${g.validated ? 'לחץ לביטול אישור' : 'לחץ לאישור'}">
+                                    ${g.validated ? '✓' : '-'}
+                                </button>
+                            </td>
+                            <td style="padding:${isMobile ? '14px 8px' : '14px'}; font-size: ${isMobile ? '1rem' : '0.9rem'}; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <button onclick='toggleGuestEntry(${JSON.stringify(g).replace(/'/g, "&#39;")}, event)' 
+                                        style="background: ${g.entered ? '#4CAF50' : '#666'}; color: white; border: none; border-radius: 4px; padding: ${isMobile ? '8px 10px' : '6px 12px'}; cursor: pointer; font-size: ${isMobile ? '0.9rem' : '0.8rem'}; min-width: ${isMobile ? '44px' : '40px'}; height: ${isMobile ? '44px' : '36px'}; transition: background 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); touch-action: manipulation;"
+                                        onmouseover="this.style.transform='scale(1.05)'" 
+                                        onmouseout="this.style.transform='scale(1)'"
+                                        title="${g.entered ? 'לחץ לביטול כניסה' : 'לחץ לסמן כניסה'}">
+                                    ${g.entered ? '✓' : '-'}
+                                </button>
+                            </td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -1033,6 +1049,208 @@
                 console.error('Error marking guest as entered:', error);
                 alert('שגיאה בחיבור לשרת');
             }
+        }
+
+        // Function to toggle guest validation status
+        async function toggleGuestValidation(guest, event) {
+            event.stopPropagation(); // Prevent row click event
+            
+            const button = event.target;
+            const newValidatedStatus = !guest.validated;
+            
+            // Show loading state
+            const originalText = button.innerHTML;
+            const originalBackground = button.style.background;
+            button.innerHTML = '...';
+            button.style.background = '#FFA500';
+            button.disabled = true;
+            
+            try {
+                // Call API to update validation status
+                const response = await fetch(`/api/guests/${guest.realPhone || guest.phone}/validation`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ validated: newValidatedStatus })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update the guest object
+                    guest.validated = newValidatedStatus;
+                    guest.entryCode = result.guest.entryCode;
+                    
+                    // Update the in-memory data
+                    if (window.allGuests) {
+                        const existingGuest = window.allGuests.find(g => (g.realPhone || g.phone) === (guest.realPhone || guest.phone));
+                        if (existingGuest) {
+                            existingGuest.validated = guest.validated;
+                            existingGuest.entryCode = guest.entryCode;
+                        }
+                    }
+                    
+                    // Provide visual feedback
+                    button.style.background = guest.validated ? '#4CAF50' : '#666';
+                    button.innerHTML = guest.validated ? '✓' : '-';
+                    button.title = guest.validated ? 'לחץ לביטול אישור' : 'לחץ לאישור';
+                    button.disabled = false;
+                    
+                    // Add a brief flash effect
+                    button.style.transform = 'scale(1.1)';
+                    setTimeout(() => {
+                        button.style.transform = 'scale(1)';
+                    }, 150);
+                    
+                    // Show status message
+                    const statusMsg = guest.validated ? 'אורח אושר בהצלחה' : 'אישור אורח בוטל';
+                    showStatusMessage(statusMsg);
+                    
+                    // Refresh the display
+                    if (document.getElementById('guests-tab').classList.contains('active')) {
+                        displayGuests(window.allGuests);
+                    }
+                } else {
+                    // Revert the button state if API call failed
+                    button.style.background = originalBackground;
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                    showStatusMessage(`שגיאה: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('Error updating guest validation:', error);
+                // Revert the button state if API call failed
+                button.style.background = originalBackground;
+                button.innerHTML = originalText;
+                button.disabled = false;
+                showStatusMessage('שגיאה בחיבור לשרת');
+            }
+        }
+
+        // Function to toggle guest entry status
+        async function toggleGuestEntry(guest, event) {
+            event.stopPropagation(); // Prevent row click event
+            
+            const button = event.target;
+            const newEnteredStatus = !guest.entered;
+            
+            // Show loading state
+            const originalText = button.innerHTML;
+            const originalBackground = button.style.background;
+            button.innerHTML = '...';
+            button.style.background = '#FFA500';
+            button.disabled = true;
+            
+            try {
+                // Call API to update entry status
+                const response = await fetch(`/api/guests/${guest.realPhone || guest.phone}/entry`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ entered: newEnteredStatus })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update the guest object
+                    guest.entered = newEnteredStatus;
+                    
+                    // Update the in-memory data
+                    if (window.allGuests) {
+                        const existingGuest = window.allGuests.find(g => (g.realPhone || g.phone) === (guest.realPhone || guest.phone));
+                        if (existingGuest) {
+                            existingGuest.entered = guest.entered;
+                        }
+                    }
+                    
+                    // Provide visual feedback
+                    button.style.background = guest.entered ? '#4CAF50' : '#666';
+                    button.innerHTML = guest.entered ? '✓' : '-';
+                    button.title = guest.entered ? 'לחץ לביטול כניסה' : 'לחץ לסמן כניסה';
+                    button.disabled = false;
+                    
+                    // Add a brief flash effect
+                    button.style.transform = 'scale(1.1)';
+                    setTimeout(() => {
+                        button.style.transform = 'scale(1)';
+                    }, 150);
+                    
+                    // Show status message
+                    const statusMsg = guest.entered ? 'אורח סומן כנכנס' : 'סמן כניסה בוטל';
+                    showStatusMessage(statusMsg);
+                    
+                    // Refresh the display
+                    if (document.getElementById('guests-tab').classList.contains('active')) {
+                        displayGuests(window.allGuests);
+                    }
+                } else {
+                    // Revert the button state if API call failed
+                    button.style.background = originalBackground;
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                    showStatusMessage(`שגיאה: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('Error updating guest entry status:', error);
+                // Revert the button state if API call failed
+                button.style.background = originalBackground;
+                button.innerHTML = originalText;
+                button.disabled = false;
+                showStatusMessage('שגיאה בחיבור לשרת');
+            }
+        }
+
+        // Function to show status messages
+        function showStatusMessage(message) {
+            // Remove existing status message if any
+            const existingMsg = document.querySelector('.status-message');
+            if (existingMsg) {
+                existingMsg.remove();
+            }
+            
+            // Create new status message
+            const statusMsg = document.createElement('div');
+            statusMsg.className = 'status-message';
+            statusMsg.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: rgba(0, 0, 0, 0.9);
+                color: #FFD700;
+                padding: 12px 20px;
+                border-radius: 8px;
+                border: 2px solid #FFD700;
+                font-size: 0.9rem;
+                z-index: 1000;
+                opacity: 0;
+                transform: translateY(-20px);
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            `;
+            statusMsg.textContent = message;
+            
+            // Add to page
+            document.body.appendChild(statusMsg);
+            
+            // Animate in
+            setTimeout(() => {
+                statusMsg.style.opacity = '1';
+                statusMsg.style.transform = 'translateY(0)';
+            }, 10);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                statusMsg.style.opacity = '0';
+                statusMsg.style.transform = 'translateY(-20px)';
+                setTimeout(() => {
+                    if (statusMsg.parentNode) {
+                        statusMsg.remove();
+                    }
+                }, 300);
+            }, 3000);
         }
 
         // Load data on page load

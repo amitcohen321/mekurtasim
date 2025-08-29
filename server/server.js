@@ -231,6 +231,103 @@ app.post('/api/guests', requireAdminCookie, (req, res) => {
     res.json({ success: true, guest: { name, phone: cleanedPhone, tickets, newsletter: newsletter || false } });
 });
 
+// API endpoint to update guest validation status (for admin)
+app.patch('/api/guests/:phone/validation', requireAdminCookie, (req, res) => {
+    const { phone } = req.params;
+    const { validated } = req.body;
+    
+    if (typeof validated !== 'boolean') {
+        return res.status(400).json({ success: false, message: 'Validated status must be boolean' });
+    }
+    
+    const cleanedPhone = phone.replace(/\D/g, '');
+    
+    // Check if guest exists
+    if (!guestsByPhone[cleanedPhone]) {
+        return res.status(404).json({ success: false, message: 'Guest not found' });
+    }
+    
+    // Get or create validation entry
+    let validationEntry = validatedEntries.get(cleanedPhone);
+    if (!validationEntry) {
+        validationEntry = {
+            name: guestsByPhone[cleanedPhone].name,
+            tickets: guestsByPhone[cleanedPhone].tickets,
+            phoneValidationTimestamp: validated ? new Date().toISOString() : null,
+            ip: 'admin-update',
+            entryCode: validated ? generateUniqueCode() : null,
+            entered: false,
+            entryTimestamp: null,
+            enteredBy: null,
+            newsletter: false
+        };
+        validatedEntries.set(cleanedPhone, validationEntry);
+    } else {
+        // Update existing entry
+        if (validated && !validationEntry.phoneValidationTimestamp) {
+            validationEntry.phoneValidationTimestamp = new Date().toISOString();
+            validationEntry.entryCode = generateUniqueCode();
+        } else if (!validated) {
+            validationEntry.phoneValidationTimestamp = null;
+            validationEntry.entryCode = null;
+            // Reset entry status if validation is removed
+            validationEntry.entered = false;
+            validationEntry.entryTimestamp = null;
+            validationEntry.enteredBy = null;
+        }
+    }
+    
+    res.json({ 
+        success: true, 
+        message: `Guest ${validated ? 'validated' : 'unvalidated'} successfully`,
+        guest: {
+            phone: cleanedPhone,
+            name: guestsByPhone[cleanedPhone].name,
+            validated: validated,
+            entryCode: validationEntry.entryCode
+        }
+    });
+});
+
+// API endpoint to update guest entry status (for admin)
+app.patch('/api/guests/:phone/entry', requireAdminCookie, (req, res) => {
+    const { phone } = req.params;
+    const { entered } = req.body;
+    
+    if (typeof entered !== 'boolean') {
+        return res.status(400).json({ success: false, message: 'Entry status must be boolean' });
+    }
+    
+    const cleanedPhone = phone.replace(/\D/g, '');
+    
+    // Check if guest exists
+    if (!guestsByPhone[cleanedPhone]) {
+        return res.status(404).json({ success: false, message: 'Guest not found' });
+    }
+    
+    // Check if guest is validated (required for entry)
+    const validationEntry = validatedEntries.get(cleanedPhone);
+    if (!validationEntry || !validationEntry.phoneValidationTimestamp) {
+        return res.status(400).json({ success: false, message: 'Guest must be validated before marking as entered' });
+    }
+    
+    // Update entry status
+    validationEntry.entered = entered;
+    validationEntry.entryTimestamp = entered ? new Date().toISOString() : null;
+    validationEntry.enteredBy = entered ? 'AdminDirectUpdate' : null;
+    
+    res.json({ 
+        success: true, 
+        message: `Guest ${entered ? 'marked as entered' : 'entry status removed'} successfully`,
+        guest: {
+            phone: cleanedPhone,
+            name: guestsByPhone[cleanedPhone].name,
+            entered: entered,
+            entryTimestamp: validationEntry.entryTimestamp
+        }
+    });
+});
+
 // API endpoint to get newsletter subscribers (for admin)
 app.get('/api/newsletter-subscribers', requireAdminCookie, (req, res) => {
     const subscribers = Array.from(validatedEntries.entries())
