@@ -285,7 +285,7 @@ app.post('/api/validate-code', (req, res) => {
         if (foundEntry.entered) {
             return res.status(400).json({
                 success: false,
-                message: `Code already used. Guest ${foundEntry.name} entered at ${new Date(foundEntry.entryTimestamp).toLocaleString('he-IL')}.`
+                message: `הקוד כבר שומש. האורח ${foundEntry.name} נכנס בשעה ${new Date(foundEntry.entryTimestamp).toLocaleString('he-IL')}.`
             });
         } else {
             foundEntry.entered = true;

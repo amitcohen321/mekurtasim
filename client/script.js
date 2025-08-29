@@ -55,6 +55,11 @@ function checkGuest(phoneNumber) {
 function showSuccess(guest) {
     resultDiv.className = 'result success';
     resultDiv.innerHTML = `
+        <div style="margin-bottom: 20px;">
+            <button id="backButton" style="background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.4); color: white; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: all 0.3s ease; width: 100%;">
+                ← חזור לחיפוש
+            </button>
+        </div>
         <div class="welcome-name" style="text-align: center;">✨ ברוכים הבאים ${guest.name}! ✨</div>
         <div class="tickets-info">
             🎟️ רשומים על שמך ${guest.tickets} כרטיסים
@@ -78,8 +83,10 @@ function showSuccess(guest) {
 
         <div class="welcome-text">
         </div>
-
     `;
+
+    // Add event listener for back button
+    document.getElementById('backButton').addEventListener('click', resetForm);
 
     if (navigator.vibrate) {
         navigator.vibrate([100, 50, 100]);
