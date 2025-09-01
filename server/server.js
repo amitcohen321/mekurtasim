@@ -111,6 +111,8 @@ app.post('/api/validate', (req, res) => {
             message: 'מספר זה כבר אומת בעבר',
             validatedAt: entry.phoneValidationTimestamp,
             validatedBy: entry.name,
+            phone: cleanedPhone,
+            tickets: entry.tickets,
             entryCode: entry.entryCode
         });
     }
@@ -136,6 +138,7 @@ app.post('/api/validate', (req, res) => {
             success: true,
             guest: {
                 name: guest.name,
+                phone: cleanedPhone,
                 tickets: guest.tickets,
                 entryCode: validatedEntries.get(cleanedPhone).entryCode
             }
@@ -510,7 +513,7 @@ app.post('/api/share-message', (req, res) => {
         guestMessages.shift();
     }
     
-    console.log(`📝 New message from ${guestName}: ${message}`);
+    console.log(`📝 New message from ${guestName} (${guestPhone}): ${message}`);
     
     res.json({
         success: true,

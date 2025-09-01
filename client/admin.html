@@ -830,7 +830,6 @@
                         <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: center; width: 12%;">קוד כניסה</th>
                         <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: center; width: 12%;">אושר</th>
                         <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: center; width: 12%;">נכנס</th>
-                        <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: center; width: 12%;">הודעות</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -856,11 +855,6 @@
                                         title="${g.entered ? 'לחץ לביטול כניסה' : 'לחץ לסמן כניסה'}">
                                     ${g.entered ? '✓' : '-'}
                                 </button>
-                            </td>
-                            <td style="padding:${isMobile ? '14px 8px' : '14px'}; font-size: ${isMobile ? '1rem' : '0.9rem'}; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                <span style="color: ${g.hasMessages ? '#FFD700' : '#666'}; font-weight: bold; font-size: ${isMobile ? '1.1rem' : '1rem'};" title="${g.hasMessages ? 'יש הודעות' : 'אין הודעות'}">
-                                    ${g.hasMessages ? '💬' : '-'}
-                                </span>
                             </td>
                         </tr>
                     `).join('')}
