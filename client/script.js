@@ -65,7 +65,7 @@ function showSuccess(guest) {
         </div>
         <div class="welcome-name" style="text-align: center;">✨ ברוכים הבאים ${guest.name}! ✨</div>
         <div class="tickets-info">
-            🎟️ רשומים על שמך ${guest.tickets} כרטיסים
+            🎟️ רשומים על שמך ${guest.tickets} כרטיס/ים
         </div>
         <div class="entrance-code-section" style="background: rgba(255,255,255,0.2); padding: 16px; margin: 16px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.4); text-align: center;">
             <div style="font-size: 1.1rem; margin-bottom: 8px; font-weight: bold;">🚪 קוד כניסה לדלת:</div>
@@ -79,7 +79,6 @@ function showSuccess(guest) {
             </div>
             <div style="font-size: 0.9rem; color: rgba(255,255,255,0.8); margin-top: 8px; line-height: 1.4;">
                 <strong>הראו קוד זה למארחת בכניסה</strong><br>
-                <small>הקוד תקף רק לכניסה אחת</small>
             </div>
         </div>
         ` : ''}
@@ -89,7 +88,7 @@ function showSuccess(guest) {
         
         <!-- Text Input Section -->
         <div class="text-input-section" style="background: rgba(255,255,255,0.15); padding: 20px; margin: 20px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.3);">
-            <div style="font-size: 1.1rem; margin-bottom: 12px; font-weight: bold; color: white;">
+            <div style="font-size: 1rem; margin-bottom: 12px; font-weight: bold; color: white;">
             מה בא לנו לכתוב בלי קשר לכלום?
             </div>
             <textarea id="guest-message" placeholder="..." 
@@ -403,8 +402,8 @@ function showAlreadyValidated(data) {
         <a href="https://wa.me/972544491343?text=שלום, המספר שלי כבר אומת אבל אני צריך עזרה" target="_blank" class="paybox-btn" style="background: #81C784; margin-top: 12px; display: block; text-align: center;">
             📲 פנייה למנהל בוואטסאפ
         </a>
-        <button onclick="goBack()" class="back-btn" style="background: #FF9C42; margin-top: 12px; display: block; width: 100%; padding: 12px; border: none; border-radius: 8px; color: white; font-size: 1rem; cursor: pointer; font-family: inherit;">
-            ← חזור לדף הבית
+        <button onclick="resetForm()" class="back-btn" style="background: #FF9C42; margin-top: 12px; display: block; width: 100%; padding: 12px; border: none; border-radius: 8px; color: white; font-size: 1rem; cursor: pointer; font-family: inherit;">
+            ← חזור לחיפוש
         </button>
     `;
 
