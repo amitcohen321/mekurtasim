@@ -659,4 +659,56 @@ body {
     .door-code {
         font-size: 1.5rem;
     }
+}
+
+/* Text Input Section Styles */
+.text-input-section {
+    animation: fadeIn 0.4s ease-out;
+}
+
+.text-input-section textarea {
+    transition: all 0.3s ease;
+}
+
+.text-input-section textarea:focus {
+    outline: none;
+    border-color: #FFD700;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+    transform: translateY(-1px);
+}
+
+.text-input-section button {
+    transition: all 0.3s ease;
+}
+
+.text-input-section button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 156, 66, 0.3);
+}
+
+.text-input-section button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+#message-status {
+    transition: all 0.3s ease;
+}
+
+/* Mobile responsive for text input */
+@media (max-width: 400px) {
+    .text-input-section {
+        padding: 16px !important;
+    }
+    
+    .text-input-section textarea {
+        min-height: 60px !important;
+        font-size: 0.9rem !important;
+    }
+    
+    .text-input-section button {
+        font-size: 0.9rem !important;
+        padding: 10px 20px !important;
+    }
 } 

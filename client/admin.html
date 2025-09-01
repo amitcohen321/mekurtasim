@@ -587,7 +587,7 @@
         <div class="tab-content active" id="code-validation-tab">
             <div class="code-validation-section">
                 <h3>הזן קוד אימות</h3>
-                <input type="number" id="validation-code-input" placeholder="הכנס קוד 4 ספרות" min="1000" max="9999"
+                <input type="number" id="validation-code-input" placeholder="קוד 4 ספרות" min="1000" max="9999"
                     maxlength="4" style="direction: ltr; font-size: 1.5rem; letter-spacing: 8px;">
                 <button class="btn" onclick="validateByCode()">אשר קוד</button>
                 <div id="code-validation-status"></div>
@@ -825,11 +825,12 @@
             table.innerHTML = `
                 <thead style="position: sticky; top: 0; z-index: 10;">
                     <tr style="background:#000;color:#FFD700;">
-                        <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: right; width: 30%;">שם</th>
-                        <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: center; width: 25%;">טלפון</th>
-                        <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: center; width: 15%;">קוד כניסה</th>
-                        <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: center; width: 15%;">אושר</th>
-                        <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: center; width: 15%;">נכנס</th>
+                        <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: right; width: 25%;">שם</th>
+                        <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: center; width: 20%;">טלפון</th>
+                        <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: center; width: 12%;">קוד כניסה</th>
+                        <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: center; width: 12%;">אושר</th>
+                        <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: center; width: 12%;">נכנס</th>
+                        <th style="padding:${isMobile ? '10px 8px' : '10px'}; font-size: ${isMobile ? '1.1rem' : '1rem'}; background: #000; border-bottom: 2px solid #FFD700; text-align: center; width: 12%;">הודעות</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -855,6 +856,11 @@
                                         title="${g.entered ? 'לחץ לביטול כניסה' : 'לחץ לסמן כניסה'}">
                                     ${g.entered ? '✓' : '-'}
                                 </button>
+                            </td>
+                            <td style="padding:${isMobile ? '14px 8px' : '14px'}; font-size: ${isMobile ? '1rem' : '0.9rem'}; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <span style="color: ${g.hasMessages ? '#FFD700' : '#666'}; font-weight: bold; font-size: ${isMobile ? '1.1rem' : '1rem'};" title="${g.hasMessages ? 'יש הודעות' : 'אין הודעות'}">
+                                    ${g.hasMessages ? '💬' : '-'}
+                                </span>
                             </td>
                         </tr>
                     `).join('')}
@@ -908,6 +914,11 @@
             console.log('Target content element:', targetContent);
             if (targetContent) {
                 targetContent.classList.add('active');
+                
+                // Load specific data for certain tabs
+                if (tabName === 'guests') {
+                    loadGuests();
+                }
             } else {
                 console.error('Tab content not found for:', tabName + '-tab');
             }
@@ -936,7 +947,8 @@
                     tickets: g.tickets,
                     validated: g.validated ? 'כן' : 'לא',
                     entered: g.entered ? 'כן' : 'לא',
-                    newsletter: g.newsletter ? 'כן' : 'לא'
+                    newsletter: g.newsletter ? 'כן' : 'לא',
+                    messages: g.messages || ''
                 }));
                 const csv = toCSV(csvData);
                 const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1107,9 +1119,9 @@
                     const statusMsg = guest.validated ? 'אורח אושר בהצלחה' : 'אישור אורח בוטל';
                     showStatusMessage(statusMsg);
                     
-                    // Refresh the display
+                    // Refresh the display while preserving search filter
                     if (document.getElementById('guests-tab').classList.contains('active')) {
-                        displayGuests(window.allGuests);
+                        filterGuests();
                     }
                 } else {
                     // Revert the button state if API call failed
@@ -1182,9 +1194,9 @@
                     const statusMsg = guest.entered ? 'אורח סומן כנכנס' : 'סמן כניסה בוטל';
                     showStatusMessage(statusMsg);
                     
-                    // Refresh the display
+                    // Refresh the display while preserving search filter
                     if (document.getElementById('guests-tab').classList.contains('active')) {
-                        displayGuests(window.allGuests);
+                        filterGuests();
                     }
                 } else {
                     // Revert the button state if API call failed
@@ -1363,6 +1375,15 @@
                         <div class="guest-detail-label">הסכים לקבל עדכונים</div>
                         <div class="guest-detail-value">${guest.newsletter ? '✅ כן' : '❌ לא'}</div>
                     </div>
+
+                    ${guest.hasMessages ? `
+                        <div class="guest-detail">
+                            <div class="guest-detail-label">הודעות שנשלחו</div>
+                            <div class="guest-detail-value" style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; border-left: 3px solid #FFD700; font-size: 0.9rem; line-height: 1.4; text-align: right; margin-top: 8px;">
+                                ${guest.messages}
+                            </div>
+                        </div>
+                    ` : ''}
                 </div>
             `;
 

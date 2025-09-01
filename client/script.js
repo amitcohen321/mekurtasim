@@ -53,6 +53,9 @@ function checkGuest(phoneNumber) {
 
 // הצג תוצאת הצלחה
 function showSuccess(guest) {
+    // Set current guest for message sharing
+    currentGuest = guest;
+    
     resultDiv.className = 'result success';
     resultDiv.innerHTML = `
         <div style="margin-bottom: 20px;">
@@ -83,10 +86,28 @@ function showSuccess(guest) {
 
         <div class="welcome-text">
         </div>
+        
+        <!-- Text Input Section -->
+        <div class="text-input-section" style="background: rgba(255,255,255,0.15); padding: 20px; margin: 20px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.3);">
+            <div style="font-size: 1.1rem; margin-bottom: 12px; font-weight: bold; color: white;">
+            מה בא לנו לכתוב בלי קשר לכלום?
+            </div>
+            <textarea id="guest-message" placeholder="..." 
+                      style="width: 100%; min-height: 80px; padding: 12px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.9); color: #333; font-size: 1rem; font-family: inherit; resize: vertical; margin-bottom: 12px;"
+                      maxlength="500"></textarea>
+            <button id="share-message-btn" 
+                    style="background: linear-gradient(135deg, #FF9C42, #FFD700); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.3s ease; width: 100%;">
+                שתפו אותנו
+            </button>
+            <div id="message-status" style="margin-top: 8px; font-size: 0.9rem; min-height: 1.2em;"></div>
+        </div>
     `;
 
     // Add event listener for back button
     document.getElementById('backButton').addEventListener('click', resetForm);
+    
+    // Add event listener for share message button
+    document.getElementById('share-message-btn').addEventListener('click', shareMessage);
 
     if (navigator.vibrate) {
         navigator.vibrate([100, 50, 100]);
@@ -107,11 +128,10 @@ function showFailure() {
     resultDiv.className = 'result fail';
     resultDiv.innerHTML = `
         <div style="font-size: 1.1rem; margin-bottom: 8px;">
-            ❌ מצטערים, אינך ברשימת האורחי
+            ❌ מצטערים, אינך ברשימת האורחים
         </div>
-        <a href="https://wa.me/972544491343?text=שלום, אני לא נמצא ברשימת האורחים למסיבת הגג. האם יש אפשרות להצטרף?" target="_blank" class="paybox-btn" style="background: #81C784; margin-top: 8px; display: block; text-align: center;">
-            📲 פנייה למנהל בוואטסאפ
-        </a>
+        <div style="font-size: 1.1rem; margin-bottom: 8px; text-align: center;">
+אנא פנה למארחת        </div>
         <button onclick="goBack()" class="back-btn" style="background: #FF9C42; margin-top: 12px; display: block; width: 100%; padding: 12px; border: none; border-radius: 8px; color: white; font-size: 1rem; cursor: pointer; font-family: inherit;">
             ← חזור לדף הבית
         </button>
@@ -351,6 +371,13 @@ function logSuccessfulEntry(guest) {
 
 // Show already validated message
 function showAlreadyValidated(data) {
+    // Set current guest for message sharing
+    currentGuest = {
+        name: data.validatedBy || 'אורח',
+        phone: data.phone || '',
+        tickets: data.tickets || 1
+    };
+    
     resultDiv.className = 'result fail';
     resultDiv.innerHTML = `
         <div style="font-size: 1.1rem; margin-bottom: 8px;">
@@ -400,4 +427,71 @@ function showError(message) {
             📲 פנייה למנהל בוואטסאפ
         </a>
     `;
+}
+
+// Share message function
+async function shareMessage() {
+    const messageInput = document.getElementById('guest-message');
+    const shareBtn = document.getElementById('share-message-btn');
+    const statusDiv = document.getElementById('message-status');
+    
+    const message = messageInput.value.trim();
+    
+    if (!message) {
+        statusDiv.textContent = 'נא להזין הודעה';
+        statusDiv.style.color = '#FF5252';
+        return;
+    }
+    
+    if (message.length > 500) {
+        statusDiv.textContent = 'ההודעה ארוכה מדי (מקסימום 500 תווים)';
+        statusDiv.style.color = '#FF5252';
+        return;
+    }
+    
+    // Show loading state
+    shareBtn.disabled = true;
+    shareBtn.textContent = 'שולח...';
+    statusDiv.textContent = '';
+    
+    try {
+        const response = await fetch(`${API_URL}/share-message`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: message,
+                guestName: currentGuest ? currentGuest.name : 'אורח',
+                guestPhone: currentGuest ? currentGuest.phone : ''
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            statusDiv.textContent = '✅ ההודעה נשלחה בהצלחה!';
+            statusDiv.style.color = '#10C26D';
+            messageInput.value = '';
+            messageInput.disabled = true;
+            shareBtn.disabled = true;
+            shareBtn.textContent = 'נשלח ✓';
+            
+            // Vibrate on success
+            if (navigator.vibrate) {
+                navigator.vibrate([100, 50, 100]);
+            }
+        } else {
+            statusDiv.textContent = data.message || 'שגיאה בשליחת ההודעה';
+            statusDiv.style.color = '#FF5252';
+            shareBtn.disabled = false;
+            shareBtn.textContent = 'שתף אותנו';
+        }
+    } catch (error) {
+        console.error('Error sharing message:', error);
+        statusDiv.textContent = 'שגיאה בחיבור לשרת';
+        statusDiv.style.color = '#FF5252';
+        shareBtn.disabled = false;
+        shareBtn.textContent = 'שתף אותנו';
+    }
 } 

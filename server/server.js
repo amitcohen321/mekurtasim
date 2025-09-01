@@ -179,6 +179,12 @@ app.get('/api/guests', requireAdminCookie, (req, res) => {
     const guests = Object.entries(guestsByPhone).map(([phone, guest]) => {
         const validated = validatedEntries.has(phone);
         const validationData = validated ? validatedEntries.get(phone) : null;
+        
+        // Find if this guest has sent any messages
+        const guestMsgs = guestMessages.filter(msg => msg.guestPhone === phone);
+        const hasMessages = guestMsgs.length > 0;
+        const messageText = hasMessages ? guestMsgs.map(msg => msg.message).join(' | ') : '';
+        
         return {
             phone: phone.substring(0, 3) + '****' + phone.substring(7), // Masked phone
             realPhone: phone, 
@@ -190,7 +196,9 @@ app.get('/api/guests', requireAdminCookie, (req, res) => {
             entered: validationData ? validationData.entered : false,
             entryTimestamp: validationData ? validationData.entryTimestamp : null,
             enteredBy: validationData ? validationData.enteredBy : null,
-            newsletter: validationData ? validationData.newsletter : false
+            newsletter: validationData ? validationData.newsletter : false,
+            messages: messageText,
+            hasMessages: hasMessages
         };
     });
     // Sort by name
@@ -462,6 +470,61 @@ app.get('/admin/validate/:code', requireAdminCookie, (req, res) => {
 
     const encodedGuestData = encodeURIComponent(JSON.stringify(guestData));
     res.redirect(`/admin#validate-guest=${encodedGuestData}`);
+});
+
+// In-memory storage for guest messages
+const guestMessages = [];
+
+// API endpoint for sharing messages
+app.post('/api/share-message', (req, res) => {
+    const { message, guestName, guestPhone } = req.body;
+    
+    if (!message || !message.trim()) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'הודעה חסרה' 
+        });
+    }
+    
+    if (message.length > 500) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'ההודעה ארוכה מדי (מקסימום 500 תווים)' 
+        });
+    }
+    
+    // Add message to storage
+    const messageEntry = {
+        id: Date.now().toString(),
+        message: message.trim(),
+        guestName: guestName || 'אורח',
+        guestPhone: guestPhone || '',
+        timestamp: new Date().toISOString(),
+        ip: req.ip
+    };
+    
+    guestMessages.push(messageEntry);
+    
+    // Keep only last 100 messages to prevent memory issues
+    if (guestMessages.length > 100) {
+        guestMessages.shift();
+    }
+    
+    console.log(`📝 New message from ${guestName}: ${message}`);
+    
+    res.json({
+        success: true,
+        message: 'ההודעה נשלחה בהצלחה',
+        messageId: messageEntry.id
+    });
+});
+
+// API endpoint to get all messages (for admin)
+app.get('/api/messages', requireAdminCookie, (req, res) => {
+    res.json({
+        count: guestMessages.length,
+        messages: guestMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    });
 });
 
 // Start server
