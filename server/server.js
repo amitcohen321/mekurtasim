@@ -405,6 +405,7 @@ app.post('/api/validate-code', (req, res) => {
             return res.json({
                 success: true,
                 guestName: foundEntry.name,
+                phone: guestPhoneKey,
                 ticketsValidated: foundEntry.tickets,
                 message: `Guest ${foundEntry.name} successfully validated for entry.`
             });

@@ -458,6 +458,125 @@
 
         /* End Styles for Code Validation Section */
 
+        /* Birthday Guest Modal Styles */
+        .birthday-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .birthday-modal-content {
+            background: linear-gradient(135deg, #FFD700 0%, #FF9C42 100%);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            border: 4px solid #FFD700;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.5);
+            animation: birthdayPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes birthdayPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .birthday-modal-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.3);
+        }
+
+        .birthday-modal-subtitle {
+            font-size: 1.5rem;
+            color: #000;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .birthday-modal-message {
+            font-size: 1.2rem;
+            color: #000;
+            margin-bottom: 25px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #000;
+        }
+
+        .birthday-modal-close {
+            background: #000;
+            color: #FFD700;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .birthday-modal-close:hover {
+            background: #333;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .birthday-emoji {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: bounce 1s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        /* Mobile responsiveness for birthday modal */
+        @media (max-width: 600px) {
+            .birthday-modal-content {
+                padding: 30px 20px;
+                margin: 10px;
+                max-width: 90%;
+            }
+
+            .birthday-modal-title {
+                font-size: 2rem;
+            }
+
+            .birthday-modal-subtitle {
+                font-size: 1.2rem;
+            }
+
+            .birthday-modal-message {
+                font-size: 1rem;
+                padding: 12px;
+            }
+
+            .birthday-emoji {
+                font-size: 3rem;
+            }
+
+            .birthday-modal-close {
+                padding: 12px 24px;
+                font-size: 1rem;
+            }
+        }
+
         /* Tablet styles */
         @media (min-width: 601px) and (max-width: 1024px) {
             .stats-grid {
@@ -687,6 +806,54 @@
 
         // Birthday guest phone numbers
         const BIRTHDAY_GUESTS = ['0522947824', '0523922020', '0544546873'];
+
+        // Function to show birthday guest modal
+        function showBirthdayModal(guestName, ticketsValidated) {
+            const modal = document.createElement('div');
+            modal.className = 'birthday-modal-overlay';
+            modal.onclick = (e) => {
+                if (e.target === modal) closeBirthdayModal();
+            };
+
+            modal.innerHTML = `
+                <div class="birthday-modal-content">
+                    <div class="birthday-emoji">🎉</div>
+                    <div class="birthday-modal-title">אורח יום הולדת!!!</div>
+                    <div class="birthday-modal-subtitle">🎂 הגשו לו פרחים לראש! 🎂</div>
+                    <div class="birthday-modal-message">
+                        <strong>קוד אומת בהצלחה עבור: ${guestName}</strong><br>
+                        ${ticketsValidated} כרטיס(ים) נוצלו
+                    </div>
+                    <button class="birthday-modal-close" onclick="closeBirthdayModal()">
+                        סגור
+                    </button>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Play celebration sound if available
+            if (navigator.vibrate) {
+                navigator.vibrate([200, 100, 200, 100, 200]);
+            }
+
+            // Auto-close after 10 seconds
+            setTimeout(() => {
+                closeBirthdayModal();
+            }, 10000);
+        }
+
+        // Function to close birthday modal
+        function closeBirthdayModal() {
+            const modal = document.querySelector('.birthday-modal-overlay');
+            if (modal) {
+                modal.style.opacity = '0';
+                modal.style.transform = 'scale(0.8)';
+                setTimeout(() => {
+                    modal.remove();
+                }, 300);
+            }
+        }
 
         // Safe date formatting function
         function formatDate(timestamp) {
@@ -1431,16 +1598,12 @@
                     const isBirthdayGuest = BIRTHDAY_GUESTS.includes(result.phone || '');
                     
                     if (isBirthdayGuest) {
-                        statusEl.innerHTML = `
-                            <div style="color: lightgreen; font-weight: bold; margin-bottom: 8px;">
-                                קוד אומת בהצלחה עבור: ${result.guestName || 'אורח'}. ${result.ticketsValidated || ''} כרטיס(ים) נוצלו.
-                            </div>
-                            <div style="color: #FFD700; font-weight: bold; font-size: 1.2rem; text-align: center; background: rgba(255, 215, 0, 0.2); padding: 10px; border-radius: 8px; border: 2px solid #FFD700;">
-                                🎉 אורח יום הולדת!!! 🎉
-                                <br>
-                                <span style="font-size: 0.9rem;">הגשו לו פרחים לראש!</span>
-                            </div>
-                        `;
+                        // Show special birthday modal
+                        showBirthdayModal(result.guestName || 'אורח', result.ticketsValidated || '');
+                        
+                        // Also update the status element with a simple message
+                        statusEl.textContent = `קוד אומת בהצלחה עבור: ${result.guestName || 'אורח'}. ${result.ticketsValidated || ''} כרטיס(ים) נוצלו.`;
+                        statusEl.style.color = 'lightgreen';
                     } else {
                         statusEl.textContent = `קוד אומת בהצלחה עבור: ${result.guestName || 'אורח'}. ${result.ticketsValidated || ''} כרטיס(ים) נוצלו.`;
                         statusEl.style.color = 'lightgreen';
