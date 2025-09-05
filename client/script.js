@@ -1,5 +1,4 @@
 // הגדרות
-const DOOR_CODE = '1909#';
 const API_URL = window.location.origin + '/api';
 
 // Back button functionality
@@ -66,10 +65,6 @@ function showSuccess(guest) {
         <div class="welcome-name" style="text-align: center;">✨ ברוכים הבאים ${guest.name}! ✨</div>
         <div class="tickets-info">
             🎟️ רשומים על שמך ${guest.tickets} כרטיס/ים
-        </div>
-        <div class="entrance-code-section" style="background: rgba(255,255,255,0.2); padding: 16px; margin: 16px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.4); text-align: center;">
-            <div style="font-size: 1.1rem; margin-bottom: 8px; font-weight: bold;">🚪 קוד כניסה לדלת:</div>
-            <div class="door-code" style="font-size: 2rem; font-weight: bold; letter-spacing: 4px; font-family: 'Courier New', monospace; color: #FFD700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">${DOOR_CODE}</div>
         </div>
         ${guest.entryCode ? `
         <div class="entry-code-section" style="background: rgba(255,255,255,0.15); padding: 20px; margin: 20px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.3); text-align: center;">

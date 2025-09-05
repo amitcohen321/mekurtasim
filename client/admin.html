@@ -566,7 +566,7 @@
 
         <div class="controls">
             <button class="btn" onclick="loadData()">🔄 רענן נתונים</button>
-            <button class="btn secondary" onclick="exportGuestsCSV()">⬇️ ייצוא רשימת אורחים (CSV)</button>
+            <button class="btn secondary" onclick="exportGuestsCSV()" style="display: none;">⬇️ ייצוא רשימת אורחים (CSV)</button>
         </div>
 
         <div class="stats-grid" id="stats">
@@ -630,7 +630,7 @@
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 8px;">
                         <label style="color: #FFD700; font-size: 1.1rem;">מספר טלפון</label>
-                        <input type="text" id="guest-phone" placeholder="05xxxxxxxx" required pattern="05[0-9]{8}"
+                        <input type="tel" id="guest-phone" placeholder="05xxxxxxxx" required pattern="05[0-9]{8}"
                             style="padding:12px; border-radius:8px; border:1px solid rgba(255,215,0,0.3);
                                       background: rgba(0,0,0,0.3); color: white; font-size: 1.1rem; direction: ltr;">
                     </div>
@@ -684,6 +684,9 @@
         }
 
         let currentStats = null;
+
+        // Birthday guest phone numbers
+        const BIRTHDAY_GUESTS = ['0522947824', '0523922020', '0544546873'];
 
         // Safe date formatting function
         function formatDate(timestamp) {
@@ -1424,8 +1427,25 @@
                 const result = await response.json();
 
                 if (response.ok && result.success) {
-                    statusEl.textContent = `קוד אומת בהצלחה עבור: ${result.guestName || 'אורח'}. ${result.ticketsValidated || ''} כרטיס(ים) נוצלו.`;
-                    statusEl.style.color = 'lightgreen';
+                    // Check if this is a birthday guest
+                    const isBirthdayGuest = BIRTHDAY_GUESTS.includes(result.phone || '');
+                    
+                    if (isBirthdayGuest) {
+                        statusEl.innerHTML = `
+                            <div style="color: lightgreen; font-weight: bold; margin-bottom: 8px;">
+                                קוד אומת בהצלחה עבור: ${result.guestName || 'אורח'}. ${result.ticketsValidated || ''} כרטיס(ים) נוצלו.
+                            </div>
+                            <div style="color: #FFD700; font-weight: bold; font-size: 1.2rem; text-align: center; background: rgba(255, 215, 0, 0.2); padding: 10px; border-radius: 8px; border: 2px solid #FFD700;">
+                                🎉 אורח יום הולדת!!! 🎉
+                                <br>
+                                <span style="font-size: 0.9rem;">הגשו לו פרחים לראש!</span>
+                            </div>
+                        `;
+                    } else {
+                        statusEl.textContent = `קוד אומת בהצלחה עבור: ${result.guestName || 'אורח'}. ${result.ticketsValidated || ''} כרטיס(ים) נוצלו.`;
+                        statusEl.style.color = 'lightgreen';
+                    }
+                    
                     codeInput.value = ''; // Clear input
                     // Scroll to top to see messages if page is long
                     // window.scrollTo({ top: 0, behavior: 'smooth' });
