@@ -106,7 +106,7 @@ const guestsByPhone = {
   '0549374909': { name: 'Hadar Abo', tickets: 1 },
   '0544722411': { name: 'רן פלד', tickets: 1 },
   '0528582100': { name: 'shir nahum', tickets: 1 },
-  '0506683487': { name: 'Daniela Chen', tickets: 2 }
+  '0506683487': { name: 'Daniela Chen', tickets: 2 },
   '0545636070': { name: 'אמיר ליב', tickets: 1 }
 };
 
