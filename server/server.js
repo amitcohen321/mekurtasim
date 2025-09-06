@@ -16,6 +16,9 @@ const { guestsByPhone } = require('./guests.js');
 // In-memory cache for validated entries
 const validatedEntries = new Map();
 
+// In-memory storage for guest messages
+const guestMessages = [];
+
 // Function to generate unique 4-digit code
 function generateUniqueCode() {
     let code;
@@ -179,34 +182,39 @@ app.get('/api/validated', requireAdminCookie, (req, res) => {
 
 // API endpoint to get all guests with validation status (for admin)
 app.get('/api/guests', requireAdminCookie, (req, res) => {
-    const guests = Object.entries(guestsByPhone).map(([phone, guest]) => {
-        const validated = validatedEntries.has(phone);
-        const validationData = validated ? validatedEntries.get(phone) : null;
-        
-        // Find if this guest has sent any messages
-        const guestMsgs = guestMessages.filter(msg => msg.guestPhone === phone);
-        const hasMessages = guestMsgs.length > 0;
-        const messageText = hasMessages ? guestMsgs.map(msg => msg.message).join(' | ') : '';
-        
-        return {
-            phone: phone.substring(0, 3) + '****' + phone.substring(7), // Masked phone
-            realPhone: phone, 
-            name: guest.name,
-            tickets: guest.tickets,
-            validated: validated, // True if phone was validated
-            phoneValidationTimestamp: validationData ? validationData.phoneValidationTimestamp : null,
-            entryCode: validationData ? validationData.entryCode : null,
-            entered: validationData ? validationData.entered : false,
-            entryTimestamp: validationData ? validationData.entryTimestamp : null,
-            enteredBy: validationData ? validationData.enteredBy : null,
-            newsletter: validationData ? validationData.newsletter : false,
-            messages: messageText,
-            hasMessages: hasMessages
-        };
-    });
-    // Sort by name
-    guests.sort((a, b) => a.name.localeCompare(b.name, 'he'));
-    res.json(guests);
+    try {
+        const guests = Object.entries(guestsByPhone).map(([phone, guest]) => {
+            const validated = validatedEntries.has(phone);
+            const validationData = validated ? validatedEntries.get(phone) : null;
+            
+            // Find if this guest has sent any messages (with null check)
+            const guestMsgs = guestMessages ? guestMessages.filter(msg => msg.guestPhone === phone) : [];
+            const hasMessages = guestMsgs.length > 0;
+            const messageText = hasMessages ? guestMsgs.map(msg => msg.message).join(' | ') : '';
+            
+            return {
+                phone: phone.substring(0, 3) + '****' + phone.substring(7), // Masked phone
+                realPhone: phone, 
+                name: guest.name,
+                tickets: guest.tickets,
+                validated: validated, // True if phone was validated
+                phoneValidationTimestamp: validationData ? validationData.phoneValidationTimestamp : null,
+                entryCode: validationData ? validationData.entryCode : null,
+                entered: validationData ? validationData.entered : false,
+                entryTimestamp: validationData ? validationData.entryTimestamp : null,
+                enteredBy: validationData ? validationData.enteredBy : null,
+                newsletter: validationData ? validationData.newsletter : false,
+                messages: messageText,
+                hasMessages: hasMessages
+            };
+        });
+        // Sort by name
+        guests.sort((a, b) => a.name.localeCompare(b.name, 'he'));
+        res.json(guests);
+    } catch (error) {
+        console.error('Error in /api/guests:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch guests' });
+    }
 });
 
 // API endpoint to add a new guest (for admin)
@@ -476,9 +484,6 @@ app.get('/admin/validate/:code', requireAdminCookie, (req, res) => {
     res.redirect(`/admin#validate-guest=${encodedGuestData}`);
 });
 
-// In-memory storage for guest messages
-const guestMessages = [];
-
 // API endpoint for sharing messages
 app.post('/api/share-message', (req, res) => {
     const { message, guestName, guestPhone } = req.body;
@@ -531,8 +536,57 @@ app.get('/api/messages', requireAdminCookie, (req, res) => {
     });
 });
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('❌ Server Error:', err);
+    res.status(500).json({ 
+        success: false, 
+        message: 'Internal server error' 
+    });
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+    console.error('❌ Uncaught Exception:', err);
+    process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+    process.exit(1);
+});
+
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log(`📊 Loaded ${Object.keys(guestsByPhone).length} guests`);
+});
+
+// Graceful shutdown handling
+process.on('SIGTERM', () => {
+    console.log('📴 SIGTERM received, shutting down gracefully...');
+    server.close(() => {
+        console.log('✅ Server closed');
+        process.exit(0);
+    });
+});
+
+process.on('SIGINT', () => {
+    console.log('📴 SIGINT received, shutting down gracefully...');
+    server.close(() => {
+        console.log('✅ Server closed');
+        process.exit(0);
+    });
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+    console.error('💥 Uncaught Exception:', err);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
+    process.exit(1);
 }); 
