@@ -486,8 +486,15 @@
         }
 
         @keyframes birthdayPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
         }
 
         .birthday-modal-title {
@@ -541,9 +548,22 @@
         }
 
         @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
+
+            0%,
+            20%,
+            50%,
+            80%,
+            100% {
+                transform: translateY(0);
+            }
+
+            40% {
+                transform: translateY(-10px);
+            }
+
+            60% {
+                transform: translateY(-5px);
+            }
         }
 
         /* Mobile responsiveness for birthday modal */
@@ -685,7 +705,8 @@
 
         <div class="controls">
             <button class="btn" onclick="loadData()">🔄 רענן נתונים</button>
-            <button class="btn secondary" onclick="exportGuestsCSV()" style="display: none;">⬇️ ייצוא רשימת אורחים (CSV)</button>
+            <button class="btn secondary" onclick="exportGuestsCSV()" style="display: none;">⬇️ ייצוא רשימת אורחים
+                (CSV)</button>
         </div>
 
         <div class="stats-grid" id="stats">
@@ -707,7 +728,8 @@
             <div class="code-validation-section">
                 <h3>הזן קוד אימות</h3>
                 <input type="number" id="validation-code-input" placeholder="קוד 4 ספרות" min="1000" max="9999"
-                    maxlength="4" style="direction: ltr; font-size: 1.5rem; letter-spacing: 8px;">
+                    inputmode="numeric" pattern="[0-9]*" maxlength="4"
+                    style="direction: ltr; font-size: 1.5rem; letter-spacing: 8px;">
                 <button class="btn" onclick="validateByCode()">אשר קוד</button>
                 <div id="code-validation-status"></div>
             </div>
@@ -749,8 +771,7 @@
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 8px;">
                         <label style="color: #FFD700; font-size: 1.1rem;">מספר טלפון</label>
-                        <input type="tel" id="guest-phone" placeholder="05xxxxxxxx" required pattern="05[0-9]{8}"
-                            style="padding:12px; border-radius:8px; border:1px solid rgba(255,215,0,0.3);
+                        <input type="tel" id="guest-phone" placeholder="05xxxxxxxx" required pattern="05[0-9]{8}" style="padding:12px; border-radius:8px; border:1px solid rgba(255,215,0,0.3);
                                       background: rgba(0,0,0,0.3); color: white; font-size: 1.1rem; direction: ltr;">
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -782,7 +803,8 @@
                         style="max-width: 100%; height: auto; width: 350px; display: block;">
                 </div>
 
-                <h4 style="color:#FFD700; margin-bottom:15px; text-align: center; font-size: 1.4rem;">או שלח תשלום לטלפון</h4>
+                <h4 style="color:#FFD700; margin-bottom:15px; text-align: center; font-size: 1.4rem;">או שלח תשלום
+                    לטלפון</h4>
                 <p style="color: white; text-align: center; font-size: 1.2rem; margin-bottom: 25px;">054-4491343</p>
             </div>
         </div>
@@ -1078,7 +1100,7 @@
             console.log('Target content element:', targetContent);
             if (targetContent) {
                 targetContent.classList.add('active');
-                
+
                 // Load specific data for certain tabs
                 if (tabName === 'guests') {
                     loadGuests();
@@ -1230,17 +1252,17 @@
         // Function to toggle guest validation status
         async function toggleGuestValidation(guest, event) {
             event.stopPropagation(); // Prevent row click event
-            
+
             const button = event.target;
             const newValidatedStatus = !guest.validated;
-            
+
             // Show loading state
             const originalText = button.innerHTML;
             const originalBackground = button.style.background;
             button.innerHTML = '...';
             button.style.background = '#FFA500';
             button.disabled = true;
-            
+
             try {
                 // Call API to update validation status
                 const response = await fetch(`/api/guests/${guest.realPhone || guest.phone}/validation`, {
@@ -1250,14 +1272,14 @@
                     },
                     body: JSON.stringify({ validated: newValidatedStatus })
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     // Update the guest object
                     guest.validated = newValidatedStatus;
                     guest.entryCode = result.guest.entryCode;
-                    
+
                     // Update the in-memory data
                     if (window.allGuests) {
                         const existingGuest = window.allGuests.find(g => (g.realPhone || g.phone) === (guest.realPhone || guest.phone));
@@ -1266,23 +1288,23 @@
                             existingGuest.entryCode = guest.entryCode;
                         }
                     }
-                    
+
                     // Provide visual feedback
                     button.style.background = guest.validated ? '#4CAF50' : '#666';
                     button.innerHTML = guest.validated ? '✓' : '-';
                     button.title = guest.validated ? 'לחץ לביטול אישור' : 'לחץ לאישור';
                     button.disabled = false;
-                    
+
                     // Add a brief flash effect
                     button.style.transform = 'scale(1.1)';
                     setTimeout(() => {
                         button.style.transform = 'scale(1)';
                     }, 150);
-                    
+
                     // Show status message
                     const statusMsg = guest.validated ? 'אורח אושר בהצלחה' : 'אישור אורח בוטל';
                     showStatusMessage(statusMsg);
-                    
+
                     // Refresh the display while preserving search filter
                     if (document.getElementById('guests-tab').classList.contains('active')) {
                         filterGuests();
@@ -1307,17 +1329,17 @@
         // Function to toggle guest entry status
         async function toggleGuestEntry(guest, event) {
             event.stopPropagation(); // Prevent row click event
-            
+
             const button = event.target;
             const newEnteredStatus = !guest.entered;
-            
+
             // Show loading state
             const originalText = button.innerHTML;
             const originalBackground = button.style.background;
             button.innerHTML = '...';
             button.style.background = '#FFA500';
             button.disabled = true;
-            
+
             try {
                 // Call API to update entry status
                 const response = await fetch(`/api/guests/${guest.realPhone || guest.phone}/entry`, {
@@ -1327,13 +1349,13 @@
                     },
                     body: JSON.stringify({ entered: newEnteredStatus })
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     // Update the guest object
                     guest.entered = newEnteredStatus;
-                    
+
                     // Update the in-memory data
                     if (window.allGuests) {
                         const existingGuest = window.allGuests.find(g => (g.realPhone || g.phone) === (guest.realPhone || guest.phone));
@@ -1341,23 +1363,23 @@
                             existingGuest.entered = guest.entered;
                         }
                     }
-                    
+
                     // Provide visual feedback
                     button.style.background = guest.entered ? '#4CAF50' : '#666';
                     button.innerHTML = guest.entered ? '✓' : '-';
                     button.title = guest.entered ? 'לחץ לביטול כניסה' : 'לחץ לסמן כניסה';
                     button.disabled = false;
-                    
+
                     // Add a brief flash effect
                     button.style.transform = 'scale(1.1)';
                     setTimeout(() => {
                         button.style.transform = 'scale(1)';
                     }, 150);
-                    
+
                     // Show status message
                     const statusMsg = guest.entered ? 'אורח סומן כנכנס' : 'סמן כניסה בוטל';
                     showStatusMessage(statusMsg);
-                    
+
                     // Refresh the display while preserving search filter
                     if (document.getElementById('guests-tab').classList.contains('active')) {
                         filterGuests();
@@ -1386,7 +1408,7 @@
             if (existingMsg) {
                 existingMsg.remove();
             }
-            
+
             // Create new status message
             const statusMsg = document.createElement('div');
             statusMsg.className = 'status-message';
@@ -1407,16 +1429,16 @@
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             `;
             statusMsg.textContent = message;
-            
+
             // Add to page
             document.body.appendChild(statusMsg);
-            
+
             // Animate in
             setTimeout(() => {
                 statusMsg.style.opacity = '1';
                 statusMsg.style.transform = 'translateY(0)';
             }, 10);
-            
+
             // Remove after 3 seconds
             setTimeout(() => {
                 statusMsg.style.opacity = '0';
@@ -1596,11 +1618,11 @@
                 if (response.ok && result.success) {
                     // Check if this is a birthday guest
                     const isBirthdayGuest = BIRTHDAY_GUESTS.includes(result.phone || '');
-                    
+
                     if (isBirthdayGuest) {
                         // Show special birthday modal
                         showBirthdayModal(result.guestName || 'אורח', result.ticketsValidated || '');
-                        
+
                         // Also update the status element with a simple message
                         statusEl.textContent = `קוד אומת בהצלחה עבור: ${result.guestName || 'אורח'}. ${result.ticketsValidated || ''} כרטיס(ים) נוצלו.`;
                         statusEl.style.color = 'lightgreen';
@@ -1608,7 +1630,7 @@
                         statusEl.textContent = `קוד אומת בהצלחה עבור: ${result.guestName || 'אורח'}. ${result.ticketsValidated || ''} כרטיס(ים) נוצלו.`;
                         statusEl.style.color = 'lightgreen';
                     }
-                    
+
                     codeInput.value = ''; // Clear input
                     // Scroll to top to see messages if page is long
                     // window.scrollTo({ top: 0, behavior: 'smooth' });
