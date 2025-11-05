@@ -100,7 +100,7 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 30px;
             margin-bottom: 40px;
             max-width: 800px;
@@ -805,7 +805,7 @@
 
                 <h4 style="color:#FFD700; margin-bottom:15px; text-align: center; font-size: 1.4rem;">או שלח תשלום
                     לטלפון</h4>
-                <p style="color: white; text-align: center; font-size: 1.2rem; margin-bottom: 25px;">054-4491343</p>
+                <p style="color: white; text-align: center; font-size: 1.2rem; margin-bottom: 25px;">054-5229997</p>
             </div>
         </div>
     </div>
@@ -915,14 +915,6 @@
 
                 console.log('📊 Updating stats HTML...');
                 document.getElementById('stats').innerHTML = `
-                    <div class="stat-card">
-                        <div class="stat-number">${stats.validatedCount}/${stats.totalGuests}</div>
-                        <div class="stat-label">אורחים שנכנסו</div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${validationRate}%"></div>
-                        </div>
-                        <div class="timestamp">${validationRate}% נכנסו</div>
-                    </div>
                     <div class="stat-card">
                         <div class="stat-number">${stats.validatedTickets}/${stats.totalTickets}</div>
                         <div class="stat-label">כרטיסים שנוצלו</div>
