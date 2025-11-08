@@ -39,7 +39,7 @@ const guestsByPhone = {
   "0523229516": { "name": "Moran Yana", "tickets": 2 },
   "0547530556": { "name": "עומרי גל", "tickets": 1 },
   "0547224527": { "name": "יהודה בטיטו", "tickets": 1 },
-  "0548011395": { "name": "מורן גליקמן", "tickets": 2 },
+  "0548011395": { "name": "מורן גליקמן", "tickets": 1 },
   "0544227255": { "name": "ירין בניאן", "tickets": 1 },
   "0544912823": { "name": "לירן עמרני", "tickets": 1 },
   "0544959200": { "name": "Tal Malka", "tickets": 1 },
@@ -98,7 +98,6 @@ const guestsByPhone = {
   "0525774714": { "name": "Avi Faine", "tickets": 1 },
   "0545314001": { "name": "Rachel Wain", "tickets": 1 },
   "0544241002": { "name": "מאור יהלומי", "tickets": 1 },
-  "0528586389": { "name": "ניקול אגרנט", "tickets": 1 },
   "0545583542": { "name": "Assaf Nuriel", "tickets": 1 },
   "0504344301": { "name": "איתן ווליבוביץ", "tickets": 1 },
   "0523200050": { "name": "noa cohen", "tickets": 1 },
@@ -131,13 +130,6 @@ const guestsByPhone = {
   "0546225549": { "name": "ליל שקאלו", "tickets": 1 },
   "0524795395": { "name": "עמית אסייג", "tickets": 1 },
   "0526189157": { "name": "Michael Begun", "tickets": 1 },
-  "0525335430": { "name": "גל חלימי", "tickets": 1 },
-  "0522979430": { "name": "חן אלמוג", "tickets": 1 },
-  "0545656053": { "name": "מאי בלונדר", "tickets": 1 },
-  "0544329192": { "name": "זיו זפרני", "tickets": 1 },
-  "0504665333": { "name": "בן שחם", "tickets": 1 },
-  "0528008874": { "name": "אלעד בנישו", "tickets": 1 },
-  "0506972100": { "name": "גילי אביוב", "tickets": 1 }
 }
 
 if (typeof module !== 'undefined' && module.exports) {
