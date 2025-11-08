@@ -828,12 +828,25 @@
         let currentStats = null;
 
         // Birthday guest phone numbers
-        const BIRTHDAY_GUESTS = ['0528137686'];
-
+        const BIRTHDAY_GUESTS = [];
+        
+        // Guests who need to pay at the desk
+        const DESK_PAYMENT_GUESTS = ['0504665333', '0544329192', '0506972100', '0528008874', '0525335439', '0522979430', '0545656053'];
+        
         // Function to show birthday guest modal
         function showBirthdayModal(guestName, ticketsValidated) {
+            console.log('🎉 showBirthdayModal called with:', guestName, ticketsValidated);
+            
+            // Remove any existing birthday modal first
+            const existingModal = document.querySelector('.birthday-modal-overlay');
+            if (existingModal) {
+                console.log('Removing existing modal');
+                existingModal.remove();
+            }
+
             const modal = document.createElement('div');
             modal.className = 'birthday-modal-overlay';
+            modal.id = 'birthday-modal-' + Date.now(); // Unique ID for debugging
             modal.onclick = (e) => {
                 if (e.target === modal) closeBirthdayModal();
             };
@@ -846,13 +859,65 @@
                         <strong>קוד אומת בהצלחה עבור: ${guestName}</strong><br>
                         ${ticketsValidated} כרטיס(ים) נוצלו
                     </div>
-                    <button class="birthday-modal-close" onclick="closeBirthdayModal()">
+                    <button class="birthday-modal-close" onclick="window.closeBirthdayModal()">
                         סגור
                     </button>
                 </div>
             `;
 
+            // Force modal to be visible and on top - use CSSStyleDeclaration.setProperty for important
+            modal.style.setProperty('display', 'flex', 'important');
+            modal.style.setProperty('z-index', '99999', 'important');
+            modal.style.setProperty('position', 'fixed', 'important');
+            modal.style.setProperty('top', '0', 'important');
+            modal.style.setProperty('left', '0', 'important');
+            modal.style.setProperty('right', '0', 'important');
+            modal.style.setProperty('bottom', '0', 'important');
+            modal.style.setProperty('background', 'rgba(0, 0, 0, 0.95)', 'important');
+            modal.style.setProperty('justify-content', 'center', 'important');
+            modal.style.setProperty('align-items', 'center', 'important');
+            modal.style.setProperty('padding', '20px', 'important');
+            modal.style.setProperty('margin', '0', 'important');
+            modal.style.setProperty('width', '100vw', 'important');
+            modal.style.setProperty('height', '100vh', 'important');
+
+            // Ensure body doesn't scroll
+            document.body.style.overflow = 'hidden';
+            
             document.body.appendChild(modal);
+            console.log('✅ Modal appended to body with ID:', modal.id);
+            
+            // Force a reflow to ensure rendering
+            void modal.offsetHeight;
+            
+            // Immediately check if modal is visible
+            const computedStyle = window.getComputedStyle(modal);
+            console.log('Modal computed styles:', {
+                display: computedStyle.display,
+                zIndex: computedStyle.zIndex,
+                position: computedStyle.position,
+                visibility: computedStyle.visibility,
+                opacity: computedStyle.opacity
+            });
+            
+            // Verify modal is visible after a short delay
+            setTimeout(() => {
+                const checkModal = document.querySelector('.birthday-modal-overlay');
+                if (checkModal) {
+                    const checkStyle = window.getComputedStyle(checkModal);
+                    console.log('Modal check after 100ms - display:', checkStyle.display, 'z-index:', checkStyle.zIndex);
+                    
+                    // If modal exists but isn't visible, try to force it
+                    if (checkStyle.display === 'none' || checkStyle.visibility === 'hidden') {
+                        console.warn('Modal is hidden! Forcing visibility...');
+                        modal.style.setProperty('display', 'flex', 'important');
+                        modal.style.setProperty('visibility', 'visible', 'important');
+                        modal.style.setProperty('opacity', '1', 'important');
+                    }
+                } else {
+                    console.error('❌ Modal was removed or not found in DOM!');
+                }
+            }, 100);
 
             // Play celebration sound if available
             if (navigator.vibrate) {
@@ -865,17 +930,94 @@
             }, 10000);
         }
 
-        // Function to close birthday modal
+        // Function to close birthday modal - make it globally accessible
         function closeBirthdayModal() {
+            console.log('closeBirthdayModal called');
             const modal = document.querySelector('.birthday-modal-overlay');
             if (modal) {
                 modal.style.opacity = '0';
                 modal.style.transform = 'scale(0.8)';
                 setTimeout(() => {
                     modal.remove();
+                    // Restore body overflow
+                    document.body.style.overflow = '';
+                    console.log('Modal removed');
                 }, 300);
+            } else {
+                console.log('No modal found to close');
+                // Restore body overflow anyway
+                document.body.style.overflow = '';
             }
         }
+        
+        // Make sure it's accessible globally
+        window.closeBirthdayModal = closeBirthdayModal;
+
+        // Function to show desk payment modal
+        function showDeskPaymentModal(guestName, ticketsValidated) {
+            console.log('💰 showDeskPaymentModal called with:', guestName, ticketsValidated);
+            
+            const modalHTML = `
+                <div id="desk-payment-modal-overlay" style="position:fixed !important;top:0 !important;left:0 !important;right:0 !important;bottom:0 !important;background:rgba(0,0,0,0.95) !important;z-index:999999 !important;display:flex !important;justify-content:center !important;align-items:center !important;padding:20px !important;margin:0 !important;width:100vw !important;height:100vh !important;">
+                    <div style="background:linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);padding:40px;border-radius:20px;text-align:center;max-width:500px;width:90%;border:4px solid #FF6B6B;box-shadow:0 10px 30px rgba(255,107,107,0.5);">
+                        <div style="font-size:4rem;margin-bottom:20px;">💰</div>
+                        <div style="font-size:2.5rem;font-weight:bold;color:#000;margin-bottom:20px;">תשלום בדלפק!</div>
+                        <div style="font-size:1.2rem;color:#000;margin-bottom:25px;background:rgba(255,255,255,0.9);padding:15px;border-radius:10px;border:2px solid #000;">
+                            <strong>קוד אומת בהצלחה עבור: ${guestName || 'אורח'}</strong><br>
+                            ${ticketsValidated || ''} כרטיס(ים) נוצלו<br><br>
+                            <strong style="color:#FF6B6B;font-size:1.3rem;">⚠️ יש לגבות תשלום בדלפק</strong>
+                        </div>
+                        <button id="close-desk-payment-modal" 
+                                style="background:#000;color:#FF6B6B;border:none;padding:15px 30px;border-radius:10px;font-size:1.1rem;font-weight:bold;cursor:pointer;">
+                            סגור
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Remove any existing modals first
+            const existingBirthday = document.getElementById('birthday-modal-overlay');
+            const existingDesk = document.getElementById('desk-payment-modal-overlay');
+            if (existingBirthday) existingBirthday.remove();
+            if (existingDesk) existingDesk.remove();
+            
+            // Ensure body doesn't scroll
+            document.body.style.overflow = 'hidden';
+            
+            // Insert modal directly into body using insertAdjacentHTML
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            console.log('✅ Desk payment modal HTML inserted into body');
+            
+            // Add close button handler
+            const closeBtn = document.getElementById('close-desk-payment-modal');
+            const modalOverlay = document.getElementById('desk-payment-modal-overlay');
+            if (closeBtn && modalOverlay) {
+                closeBtn.onclick = function() {
+                    modalOverlay.remove();
+                    document.body.style.overflow = '';
+                };
+                // Also close on overlay click
+                modalOverlay.onclick = function(e) {
+                    if (e.target === modalOverlay) {
+                        modalOverlay.remove();
+                        document.body.style.overflow = '';
+                    }
+                };
+                console.log('✅ Close handlers attached');
+            }
+            
+            // Auto-close after 15 seconds (longer than birthday modal since payment is important)
+            setTimeout(() => {
+                const modal = document.getElementById('desk-payment-modal-overlay');
+                if (modal) {
+                    modal.remove();
+                    document.body.style.overflow = '';
+                }
+            }, 15000);
+        }
+        
+        // Make sure it's accessible globally
+        window.showDeskPaymentModal = showDeskPaymentModal;
 
         // Safe date formatting function
         function formatDate(timestamp) {
@@ -1608,25 +1750,179 @@
                 const result = await response.json();
 
                 if (response.ok && result.success) {
-                    // Check if this is a birthday guest
-                    const isBirthdayGuest = BIRTHDAY_GUESTS.includes(result.phone || '');
+                    // Normalize phone number for comparison (remove any non-digits)
+                    const normalizedPhone = (result.phone || '').replace(/\D/g, '');
+                    const normalizedBirthdayGuests = BIRTHDAY_GUESTS.map(phone => phone.replace(/\D/g, ''));
+                    const normalizedDeskPaymentGuests = DESK_PAYMENT_GUESTS.map(phone => phone.replace(/\D/g, ''));
+                    
+                    // Debug logging
+                    console.log('=== VALIDATION DEBUG ===');
+                    console.log('Full result:', result);
+                    console.log('Phone from result:', result.phone);
+                    console.log('Normalized phone:', normalizedPhone);
+                    console.log('Birthday guests list:', BIRTHDAY_GUESTS);
+                    console.log('Normalized birthday guests:', normalizedBirthdayGuests);
+                    console.log('Desk payment guests list:', DESK_PAYMENT_GUESTS);
+                    console.log('Normalized desk payment guests:', normalizedDeskPaymentGuests);
+                    
+                    // Check if this is a birthday guest (takes priority)
+                    const isBirthdayGuest = normalizedBirthdayGuests.includes(normalizedPhone);
+                    // Check if this is a desk payment guest
+                    const isDeskPaymentGuest = normalizedDeskPaymentGuests.includes(normalizedPhone);
+                    console.log('Is birthday guest?', isBirthdayGuest);
+                    console.log('Is desk payment guest?', isDeskPaymentGuest);
 
+                    // Check which type of guest and show appropriate modal
+                    // Birthday guests take priority
                     if (isBirthdayGuest) {
-                        // Show special birthday modal
-                        showBirthdayModal(result.guestName || 'אורח', result.ticketsValidated || '');
-
-                        // Also update the status element with a simple message
-                        statusEl.textContent = `קוד אומת בהצלחה עבור: ${result.guestName || 'אורח'}. ${result.ticketsValidated || ''} כרטיס(ים) נוצלו.`;
-                        statusEl.style.color = 'lightgreen';
-                    } else {
-                        statusEl.textContent = `קוד אומת בהצלחה עבור: ${result.guestName || 'אורח'}. ${result.ticketsValidated || ''} כרטיס(ים) נוצלו.`;
-                        statusEl.style.color = 'lightgreen';
+                        console.log('✓ Showing birthday modal for:', result.guestName);
+                        console.log('Phone matched birthday guest list');
+                        
+                        try {
+                            // Use insertAdjacentHTML for more direct DOM manipulation
+                            const modalHTML = `
+                        <div id="birthday-modal-overlay" style="position:fixed !important;top:0 !important;left:0 !important;right:0 !important;bottom:0 !important;background:rgba(0,0,0,0.95) !important;z-index:999999 !important;display:flex !important;justify-content:center !important;align-items:center !important;padding:20px !important;margin:0 !important;width:100vw !important;height:100vh !important;">
+                            <div style="background:linear-gradient(135deg, #FFD700 0%, #FF9C42 100%);padding:40px;border-radius:20px;text-align:center;max-width:500px;width:90%;border:4px solid #FFD700;box-shadow:0 10px 30px rgba(255,215,0,0.5);">
+                                <div style="font-size:4rem;margin-bottom:20px;">🎉</div>
+                                <div style="font-size:2.5rem;font-weight:bold;color:#000;margin-bottom:20px;">אורח יום הולדת!!!</div>
+                                <div style="font-size:1.2rem;color:#000;margin-bottom:25px;background:rgba(255,255,255,0.8);padding:15px;border-radius:10px;border:2px solid #000;">
+                                    <strong>קוד אומת בהצלחה עבור: ${result.guestName || 'אורח'}</strong><br>
+                                    ${result.ticketsValidated || ''} כרטיס(ים) נוצלו
+                                </div>
+                                <button id="close-birthday-modal" 
+                                        style="background:#000;color:#FFD700;border:none;padding:15px 30px;border-radius:10px;font-size:1.1rem;font-weight:bold;cursor:pointer;">
+                                    סגור
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Remove any existing modal first
+                    const existing = document.getElementById('birthday-modal-overlay');
+                    if (existing) {
+                        console.log('Removing existing modal');
+                        existing.remove();
                     }
-
+                    
+                    // Ensure body doesn't scroll
+                    document.body.style.overflow = 'hidden';
+                    
+                    // Insert modal directly into body using insertAdjacentHTML
+                    document.body.insertAdjacentHTML('beforeend', modalHTML);
+                    console.log('✅ Modal HTML inserted into body');
+                    
+                    // Add close button handler
+                    const closeBtn = document.getElementById('close-birthday-modal');
+                    const modalOverlay = document.getElementById('birthday-modal-overlay');
+                    if (closeBtn && modalOverlay) {
+                        closeBtn.onclick = function() {
+                            modalOverlay.remove();
+                            document.body.style.overflow = '';
+                        };
+                        // Also close on overlay click
+                        modalOverlay.onclick = function(e) {
+                            if (e.target === modalOverlay) {
+                                modalOverlay.remove();
+                                document.body.style.overflow = '';
+                            }
+                        };
+                        console.log('✅ Close handlers attached');
+                    }
+                    
+                    // Verify modal exists
+                    setTimeout(() => {
+                        const check = document.getElementById('birthday-modal-overlay');
+                        if (check) {
+                            console.log('✅ Modal confirmed in DOM');
+                            const style = window.getComputedStyle(check);
+                            console.log('Modal styles:', {
+                                display: style.display,
+                                zIndex: style.zIndex,
+                                visibility: style.visibility,
+                                opacity: style.opacity
+                            });
+                        } else {
+                            console.error('❌ Modal NOT in DOM!');
+                        }
+                    }, 100);
+                    
+                    // Clear the status element for birthday guests since modal is the main notification
+                    statusEl.textContent = '';
+                    
+                    // Auto-close after 10 seconds
+                    setTimeout(() => {
+                        const modal = document.getElementById('birthday-modal-overlay');
+                        if (modal) {
+                            modal.remove();
+                            document.body.style.overflow = '';
+                        }
+                    }, 10000);
+                    
                     codeInput.value = ''; // Clear input
-                    // Scroll to top to see messages if page is long
-                    // window.scrollTo({ top: 0, behavior: 'smooth' });
-                    await loadData(); // Reload all data (stats, entries, guests)
+                    
+                    // Delay loadData significantly to ensure modal appears first
+                    // Don't reload data immediately - let user see the modal first
+                    setTimeout(async () => {
+                        // Only reload if modal is closed
+                        const modalStillExists = document.getElementById('birthday-modal-overlay');
+                        if (!modalStillExists) {
+                            await loadData(); // Reload all data (stats, entries, guests)
+                        } else {
+                            console.log('Modal still open, skipping loadData');
+                        }
+                    }, 2000);
+                        } catch (error) {
+                            console.error('Error showing birthday modal:', error);
+                            alert('Error showing birthday modal: ' + error.message);
+                            // Fallback to text notification
+                            statusEl.textContent = `קוד אומת בהצלחה עבור: ${result.guestName || 'אורח'}. ${result.ticketsValidated || ''} כרטיס(ים) נוצלו.`;
+                            statusEl.style.color = 'lightgreen';
+                            codeInput.value = '';
+                            await loadData();
+                        }
+                    } else if (isDeskPaymentGuest) {
+                        // Desk payment guests get special modal
+                        console.log('✓ Showing desk payment modal for:', result.guestName);
+                        console.log('Phone matched desk payment guest list');
+                        try {
+                            if (typeof showDeskPaymentModal === 'function') {
+                                showDeskPaymentModal(result.guestName || 'אורח', result.ticketsValidated || '');
+                            } else {
+                                console.error('showDeskPaymentModal is not a function!');
+                                // Fallback: create modal inline
+                                alert('Desk payment guest detected! Payment required at desk.');
+                            }
+                        } catch (error) {
+                            console.error('Error showing desk payment modal:', error);
+                            alert('Error showing desk payment modal: ' + error.message);
+                        }
+                        
+                        // Clear the status element for desk payment guests since modal is the main notification
+                        statusEl.textContent = '';
+                        
+                        codeInput.value = ''; // Clear input
+                        
+                        // Delay loadData significantly to ensure modal appears first
+                        setTimeout(async () => {
+                            // Only reload if modal is closed
+                            const modalStillExists = document.getElementById('desk-payment-modal-overlay');
+                            if (!modalStillExists) {
+                                await loadData(); // Reload all data (stats, entries, guests)
+                            } else {
+                                console.log('Modal still open, skipping loadData');
+                            }
+                        }, 2000);
+                    } else {
+                        // Regular guests get text notification only
+                        console.log('Regular guest - showing text notification only');
+                        statusEl.textContent = `קוד אומת בהצלחה עבור: ${result.guestName || 'אורח'}. ${result.ticketsValidated || ''} כרטיס(ים) נוצלו.`;
+                        statusEl.style.color = 'lightgreen';
+                        
+                        codeInput.value = ''; // Clear input
+                        
+                        // Reload data for regular guests
+                        await loadData(); // Reload all data (stats, entries, guests)
+                    }
                 } else {
                     statusEl.textContent = result.message || 'קוד לא תקין, לא קיים או שכבר נוצל.';
                     statusEl.style.color = 'red';
