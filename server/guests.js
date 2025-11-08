@@ -130,7 +130,10 @@ const guestsByPhone = {
   "0546465110": { "name": "עדי ברנס", "tickets": 1 },
   "0546225549": { "name": "ליל שקאלו", "tickets": 1 },
   "0524795395": { "name": "עמית אסייג", "tickets": 1 },
-  "0526189157": { "name": "Michael Begun", "tickets": 1 }
+  "0526189157": { "name": "Michael Begun", "tickets": 1 },
+  "0525335439": { "name": "Gal Halimi", "tickets": 1 },
+  "0522979430": { "name": "Hen Alomg", "tickets": 1 },
+  "0545656053": { "name": "May Blonder", "tickets": 1 }
 };
 
 if (typeof module !== 'undefined' && module.exports) {
