@@ -70,14 +70,14 @@ function showSuccess(guest) {
         <!-- Text Input Section -->
         <div class="text-input-section" style="background: rgba(255,255,255,0.15); padding: 20px; margin: 20px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.3);">
             <div style="font-size: 1rem; margin-bottom: 12px; font-weight: bold; color: white;">
-            קודם כל אם בא לכם לכתוב לנו משהו אז כאן
+            קודם כל אם בא לך לכתוב לנו משהו אז זה המקום:
             </div>
             <textarea id="guest-message" placeholder="..." 
                       style="width: 100%; min-height: 80px; padding: 12px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.9); color: #333; font-size: 1rem; font-family: inherit; resize: vertical; margin-bottom: 12px;"
                       maxlength="500"></textarea>
             <button id="share-message-btn" 
                     style="background: linear-gradient(135deg, #FF9C42, #FFD700); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.3s ease; width: 100%;">
-                שתפו אותנו
+                שלח
             </button>
             <div id="message-status" style="margin-top: 8px; font-size: 0.9rem; min-height: 1.2em;"></div>
         </div>
