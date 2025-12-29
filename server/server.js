@@ -11,7 +11,7 @@ app.set('trust proxy', 1); // trust first proxy for correct IP detection behind 
 const PORT = process.env.PORT || 3000;
 
 // Import guest data
-const { guestsByPhone } = require('./guests.js');
+const { guestsByPhone, birthdayGuests } = require('./guests.js');
 
 // In-memory cache for validated entries
 const validatedEntries = new Map();
@@ -161,7 +161,9 @@ app.get('/api/status', requireAdminCookie, (req, res) => {
         totalGuests: Object.keys(guestsByPhone).length,
         validatedCount: validatedEntries.size,
         totalTickets: Object.values(guestsByPhone).reduce((sum, guest) => sum + guest.tickets, 0),
-        validatedTickets: Array.from(validatedEntries.values()).reduce((sum, entry) => sum + entry.tickets, 0)
+        validatedTickets: Array.from(validatedEntries.values())
+            .filter(entry => entry.entered === true)
+            .reduce((sum, entry) => sum + entry.tickets, 0)
     };
     
     res.json(stats);
@@ -410,11 +412,18 @@ app.post('/api/validate-code', (req, res) => {
             
             validatedEntries.set(guestPhoneKey, foundEntry); // Update the map entry
 
+            // Check if this guest is a birthday guest
+            const cleanedPhone = guestPhoneKey.replace(/\D/g, '');
+            const isBirthdayGuest = birthdayGuests.some(birthdayPhone => 
+                birthdayPhone.replace(/\D/g, '') === cleanedPhone
+            );
+
             return res.json({
                 success: true,
                 guestName: foundEntry.name,
                 phone: guestPhoneKey,
                 ticketsValidated: foundEntry.tickets,
+                isBirthdayGuest: isBirthdayGuest,
                 message: `Guest ${foundEntry.name} successfully validated for entry.`
             });
         }

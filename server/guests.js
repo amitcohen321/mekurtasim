@@ -118,7 +118,7 @@ const guestsByPhone = {
   "0548121500": { "name": "נוי גרין", "tickets": 1 },
   "0544533789": { "name": "עמיחי גוטליב", "tickets": 1 },
   "0524871010": { "name": "דור צימברג", "tickets": 1 },
-  "0503456124": { "name": "יוליה פולישוק", "tickets": 1 },
+  "0503456123": { "name": "יוליה פולישוק", "tickets": 1 },
   "0524331591": { "name": "עמית עזורה", "tickets": 1 },
   "0545676037": { "name": "אביחי שבת", "tickets": 1 },
   "0543310008": { "name": "עומרי ימיני", "tickets": 1 },
@@ -130,8 +130,16 @@ const guestsByPhone = {
   "0546225549": { "name": "ליל שקאלו", "tickets": 1 },
   "0524795395": { "name": "עמית אסייג", "tickets": 1 },
   "0526189157": { "name": "Michael Begun", "tickets": 1 },
+  "0506972100": { "name": "גילי אביוב", "tickets": 1 },
 }
 
+// Array of phone numbers for guests who have birthdays
+// When the host validates a code for these guests, a special birthday notification will be shown
+const birthdayGuests = [
+  // Add phone numbers here (e.g., "0524370064")
+  "0506972100"
+];
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { guestsByPhone };
+  module.exports = { guestsByPhone, birthdayGuests };
 }

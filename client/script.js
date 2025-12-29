@@ -54,7 +54,7 @@ function checkGuest(phoneNumber) {
 function showSuccess(guest) {
     // Set current guest for message sharing
     currentGuest = guest;
-    
+
     resultDiv.className = 'result success';
     resultDiv.innerHTML = `
         <div style="margin-bottom: 20px;">
@@ -62,10 +62,26 @@ function showSuccess(guest) {
                 ← חזור לחיפוש
             </button>
         </div>
-        <div class="welcome-name" style="text-align: center;">✨ ברוכים הבאים ${guest.name}! ✨</div>
+        <div class="welcome-name" style="text-align: center;">✨ ברוכים הבאים ${guest.name}! </div>
         <div class="tickets-info">
-            🎟️ רשומים על שמך ${guest.tickets} כרטיס/ים
+         רשומים על שמך <b> ${guest.tickets} </b> כרטיס/ים
         </div>
+        
+        <!-- Text Input Section -->
+        <div class="text-input-section" style="background: rgba(255,255,255,0.15); padding: 20px; margin: 20px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.3);">
+            <div style="font-size: 1rem; margin-bottom: 12px; font-weight: bold; color: white;">
+            קודם כל אם בא לכם לכתוב לנו משהו אז כאן
+            </div>
+            <textarea id="guest-message" placeholder="..." 
+                      style="width: 100%; min-height: 80px; padding: 12px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.9); color: #333; font-size: 1rem; font-family: inherit; resize: vertical; margin-bottom: 12px;"
+                      maxlength="500"></textarea>
+            <button id="share-message-btn" 
+                    style="background: linear-gradient(135deg, #FF9C42, #FFD700); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.3s ease; width: 100%;">
+                שתפו אותנו
+            </button>
+            <div id="message-status" style="margin-top: 8px; font-size: 0.9rem; min-height: 1.2em;"></div>
+        </div>
+
         ${guest.entryCode ? `
         <div class="entry-code-section" style="background: rgba(255,255,255,0.15); padding: 20px; margin: 20px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.3); text-align: center;">
             <div style="font-size: 1.1rem; margin-bottom: 12px; font-weight: bold;">🔢 קוד כניסה למסיבה:</div>
@@ -81,25 +97,12 @@ function showSuccess(guest) {
         <div class="welcome-text">
         </div>
         
-        <!-- Text Input Section -->
-        <div class="text-input-section" style="background: rgba(255,255,255,0.15); padding: 20px; margin: 20px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.3);">
-            <div style="font-size: 1rem; margin-bottom: 12px; font-weight: bold; color: white;">
-            מה בא לנו לכתוב בלי קשר לכלום?
-            </div>
-            <textarea id="guest-message" placeholder="..." 
-                      style="width: 100%; min-height: 80px; padding: 12px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.9); color: #333; font-size: 1rem; font-family: inherit; resize: vertical; margin-bottom: 12px;"
-                      maxlength="500"></textarea>
-            <button id="share-message-btn" 
-                    style="background: linear-gradient(135deg, #FF9C42, #FFD700); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.3s ease; width: 100%;">
-                שתפו אותנו
-            </button>
-            <div id="message-status" style="margin-top: 8px; font-size: 0.9rem; min-height: 1.2em;"></div>
-        </div>
+
     `;
 
     // Add event listener for back button
     document.getElementById('backButton').addEventListener('click', resetForm);
-    
+
     // Add event listener for share message button
     document.getElementById('share-message-btn').addEventListener('click', shareMessage);
 
@@ -371,11 +374,11 @@ function showAlreadyValidated(data) {
         phone: data.phone || '',
         tickets: data.tickets || 1
     };
-    
+
     resultDiv.className = 'result fail';
     resultDiv.innerHTML = `
         <div style="font-size: 1.1rem; margin-bottom: 8px;">
-            ⚠️ ${data.message}
+            ${data.message}
         </div>
         <div style="font-size: 0.9rem; opacity: 0.9;">
             ${data.validatedBy} כבר אומת ב-${new Date(data.validatedAt).toLocaleString('he-IL')}
@@ -428,26 +431,26 @@ async function shareMessage() {
     const messageInput = document.getElementById('guest-message');
     const shareBtn = document.getElementById('share-message-btn');
     const statusDiv = document.getElementById('message-status');
-    
+
     const message = messageInput.value.trim();
-    
+
     if (!message) {
         statusDiv.textContent = 'נא להזין הודעה';
         statusDiv.style.color = '#FF5252';
         return;
     }
-    
+
     if (message.length > 500) {
         statusDiv.textContent = 'ההודעה ארוכה מדי (מקסימום 500 תווים)';
         statusDiv.style.color = '#FF5252';
         return;
     }
-    
+
     // Show loading state
     shareBtn.disabled = true;
     shareBtn.textContent = 'שולח...';
     statusDiv.textContent = '';
-    
+
     try {
         const response = await fetch(`${API_URL}/share-message`, {
             method: 'POST',
@@ -460,9 +463,9 @@ async function shareMessage() {
                 guestPhone: currentGuest ? currentGuest.phone : ''
             })
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok && data.success) {
             statusDiv.textContent = '✅ ההודעה נשלחה בהצלחה!';
             statusDiv.style.color = '#10C26D';
@@ -470,7 +473,7 @@ async function shareMessage() {
             messageInput.disabled = true;
             shareBtn.disabled = true;
             shareBtn.textContent = 'נשלח ✓';
-            
+
             // Vibrate on success
             if (navigator.vibrate) {
                 navigator.vibrate([100, 50, 100]);
