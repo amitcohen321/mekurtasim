@@ -153,8 +153,14 @@ const guestsByPhone = {
   "0502223793": { "name": "אלי לגזיאל", "tickets": 1 },
   "0508445593": { "name": "צליל טלמור", "tickets": 1 },
   "0525285358": { "name": "ירין אסרף", "tickets": 2 },
+  "0544329192": { "name": "זיו זפרני", "tickets": 1 },
+  "0547731110": { "name": "עידן ילוב", "tickets": 1 },
+  "0509481234": { "name": "דנה מימון", "tickets": 1 },
+  "0526008851": { "name": "אלון רייכמן", "tickets": 1 },
+  "0523314932": { "name": "מאי חגי", "tickets": 1 },
+  "0505302688": { "name": "נויה אלון", "tickets": 1 },
+  "0505302688": { "name": "רן שמר", "tickets": 1 },
 };
-
 
 // Array of phone numbers for guests who have birthdays
 // When the host validates a code for these guests, a special birthday notification will be shown
