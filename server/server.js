@@ -383,20 +383,35 @@ app.post('/api/validate-code', (req, res) => {
         return res.status(400).json({ success: false, message: 'Code is required.' });
     }
 
-    // Validate 4-digit code format
-    if (!/^\d{4}$/.test(code)) {
+    // Validate 4-digit code format and normalize to string
+    const normalizedCode = String(code).trim();
+    if (!/^\d{4}$/.test(normalizedCode)) {
         return res.status(400).json({ success: false, message: 'Code must be exactly 4 digits.' });
     }
 
     let foundEntry = null;
     let guestPhoneKey = null;
 
+    // Normalize code comparison - ensure both are strings
+    console.log('🔍 Searching for code:', normalizedCode);
+    console.log('📋 Total validated entries:', validatedEntries.size);
+    
     for (const [phone, entryData] of validatedEntries.entries()) {
-        if (entryData.entryCode === code) {
+        const storedCode = String(entryData.entryCode || '').trim();
+        if (storedCode === normalizedCode) {
             foundEntry = entryData;
             guestPhoneKey = phone;
+            console.log('✅ Code found! Guest:', foundEntry.name, 'Phone:', phone);
             break;
         }
+    }
+    
+    if (!foundEntry) {
+        // Log available codes for debugging (first 5 only)
+        const availableCodes = Array.from(validatedEntries.values())
+            .slice(0, 5)
+            .map(e => e.entryCode);
+        console.log('❌ Code not found. Sample available codes:', availableCodes);
     }
 
     if (foundEntry) {
@@ -413,10 +428,20 @@ app.post('/api/validate-code', (req, res) => {
             validatedEntries.set(guestPhoneKey, foundEntry); // Update the map entry
 
             // Check if this guest is a birthday guest
-            const cleanedPhone = guestPhoneKey.replace(/\D/g, '');
-            const isBirthdayGuest = birthdayGuests.some(birthdayPhone => 
-                birthdayPhone.replace(/\D/g, '') === cleanedPhone
-            );
+            // Normalize phone numbers by removing all non-digits and ensuring they're strings
+            const cleanedPhone = String(guestPhoneKey || '').replace(/\D/g, '');
+            const normalizedBirthdayGuests = birthdayGuests.map(phone => String(phone || '').replace(/\D/g, ''));
+            const isBirthdayGuest = normalizedBirthdayGuests.includes(cleanedPhone);
+            
+            // Debug logging
+            console.log('🎂 Birthday check:', {
+                guestPhoneKey,
+                cleanedPhone,
+                birthdayGuests,
+                normalizedBirthdayGuests,
+                isBirthdayGuest,
+                guestName: foundEntry.name
+            });
 
             return res.json({
                 success: true,
@@ -436,16 +461,19 @@ app.post('/api/validate-code', (req, res) => {
 app.get('/admin/validate/:code', requireAdminCookie, (req, res) => {
     const { code } = req.params;
     
-    if (!code || !/^\d{4}$/.test(code)) {
+    // Normalize code to string and validate format
+    const normalizedCode = String(code).trim();
+    if (!normalizedCode || !/^\d{4}$/.test(normalizedCode)) {
         return res.status(400).send('Invalid code format - must be 4 digits');
     }
 
     let foundEntry = null;
     let guestPhoneKey = null;
 
-    // Find the guest by code
+    // Find the guest by code - normalize comparison
     for (const [phone, entryData] of validatedEntries.entries()) {
-        if (entryData.entryCode === code) {
+        const storedCode = String(entryData.entryCode || '').trim();
+        if (storedCode === normalizedCode) {
             foundEntry = entryData;
             guestPhoneKey = phone;
             break;
