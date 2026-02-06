@@ -1,172 +1,481 @@
 const guestsByPhone = {
-  "0547687837": { "name": "Jonathan Buchwald", "tickets": 6 },
-  "0525774714": { "name": "Avi Faine", "tickets": 1 },
-  "0523922020": { "name": "רתם גרמן", "tickets": 3 },
-  "0504474455": { "name": "שיר מאיר", "tickets": 1 },
-  "0525940050": { "name": "Lihi Yehudaee", "tickets": 1 },
-  "0503387906": { "name": "שימי אברמוב", "tickets": 1 },
-  "0546465110": { "name": "Adi Baranes", "tickets": 2 },
-  "0505655564": { "name": "נועה כהן", "tickets": 1 },
-  "0524795395": { "name": "עמית אסייג", "tickets": 1 },
-  "0542479899": { "name": "ניצן כהן", "tickets": 1 },
-  "0528358554": { "name": "Marina Breyl", "tickets": 1 },
-  "0528410088": { "name": "Karin Goldin", "tickets": 1 },
-  "0523684427": { "name": "may cohen", "tickets": 2 },
-  "0522835427": { "name": "Moran Lavi", "tickets": 1 },
-  "0528021820": { "name": "Coral David", "tickets": 1 },
-  "0587090800": { "name": "רותם מרגלית", "tickets": 2 },
-  "0544467888": { "name": "Omer Biran", "tickets": 1 },
-  "0545589109": { "name": "דני סימן טוב", "tickets": 1 },
-  "0544213219": { "name": "Shachar Brookstein", "tickets": 1 },
-  "0524445772": { "name": "ירין גדעון", "tickets": 3 },
-  "0525610865": { "name": "David Nesimi", "tickets": 1 },
-  "0525567646": { "name": "עדן גרפי", "tickets": 1 },
-  "0526884232": { "name": "Eli Mehaudy", "tickets": 1 },
-  "0507633737": { "name": "עמית חן", "tickets": 1 },
-  "0523864491": { "name": "Michal Shamir", "tickets": 2 },
-  "0544879027": { "name": "Ayala Proter", "tickets": 1 },
-  "0547536011": { "name": "רותם נינו", "tickets": 1 },
-  "0523331061": { "name": "Inbar Binyamin", "tickets": 1 },
-  "0502000636": { "name": "Michal Tal", "tickets": 1 },
-  "0544325191": { "name": "Meitav menachem", "tickets": 1 },
-  "0547456220": { "name": "אורי קמר", "tickets": 1 },
-  "0528932302": { "name": "Gal Parizat", "tickets": 1 },
-  "0545618223": { "name": "נועה חסיס", "tickets": 2 },
-  "0547844714": { "name": "טל זקון", "tickets": 2 },
-  "0523229516": { "name": "Moran Yana", "tickets": 1 },
-  "0526165830": { "name": "קלייר איטלסון", "tickets": 2 },
-  "0547799970": { "name": "יובל חמו", "tickets": 1 },
-  "0523970116": { "name": "Yanir Calisar", "tickets": 2 },
-  "0503650860": { "name": "Doron Meshulam", "tickets": 1 },
-  "0542659848": { "name": "גיל מנשרוב", "tickets": 1 },
-  "0548009363": { "name": "Emma Smira", "tickets": 2 },
-  "0506557895": { "name": "Daniel Sinai", "tickets": 1 },
-  "0524529191": { "name": "שני קלר", "tickets": 2 },
-  "0505367742": { "name": "Karin Gabay", "tickets": 1 },
-  "0545512597": { "name": "רואי מאור", "tickets": 1 },
-  "0525953763": { "name": "אורין מור", "tickets": 1 },
-  "0548023399": { "name": "Gili Malinovitch", "tickets": 1 },
-  "0523092794": { "name": "הודיה עטיה", "tickets": 1 },
-  "0508186992": { "name": "Yehuda Levy", "tickets": 1 },
-  "0546221165": { "name": "Nitzan Bitran", "tickets": 1 },
-  "0546870500": { "name": "יובל דיאמונד", "tickets": 1 },
-  "0504007412": { "name": "Liel Mayost", "tickets": 2 },
-  "0509927199": { "name": "זוהר ויסמן", "tickets": 1 },
-  "0504359914": { "name": "עידו מהגר", "tickets": 1 },
-  "0525815638": { "name": "Talli Eldar", "tickets": 1 },
-  "0545793184": { "name": "Yarden Mizrahi", "tickets": 1 },
-  "0508323459": { "name": "דורון הרנוי", "tickets": 1 },
-  "0544830941": { "name": "ליאור בן יוסף", "tickets": 1 },
-  "0506668698": { "name": "Dor Safri", "tickets": 1 },
-  "0543106100": { "name": "ניר אוליבה", "tickets": 1 },
-  "0506681693": { "name": "Ofer Kolker", "tickets": 1 },
-  "0504503054": { "name": "סיגל מוסקוביץ", "tickets": 2 },
-  "0546200484": { "name": "Leyel Assyag", "tickets": 1 },
-  "0542273744": { "name": "Mariana Amikam", "tickets": 1 },
-  "0548121500": { "name": "נוי גרין", "tickets": 1 },
-  "0524214111": { "name": "Gil Lishner", "tickets": 1 },
-  "0549434585": { "name": "תום יוחאי", "tickets": 1 },
-  "0508766708": { "name": "Asaf Levy", "tickets": 1 },
-  "0523567501": { "name": "Evyatar Weiss", "tickets": 1 },
-  "0546436618": { "name": "שחר גואטה", "tickets": 1 },
-  "0547903655": { "name": "Tomer Bistrov Levy", "tickets": 1 },
-  "0544457923": { "name": "Or Malca", "tickets": 1 },
-  "0546867184": { "name": "דולב חיו", "tickets": 1 },
-  "0503278425": { "name": "יוגב כהן", "tickets": 1 },
-  "0524331828": { "name": "רועי פרייליך", "tickets": 2 },
-  "0542478593": { "name": "עדן אבנעים", "tickets": 1 },
-  "0525679345": { "name": "Tal Nidam", "tickets": 1 },
-  "0587892894": { "name": "Keren Codriansky Plotkin", "tickets": 1 },
-  "0526449111": { "name": "Galya Rabani", "tickets": 1 },
-  "0526620061": { "name": "Karin Malka", "tickets": 2 },
-  "0525674884": { "name": "Amiram Aznkot", "tickets": 1 },
-  "0528084262": { "name": "שיר יצחקי", "tickets": 2 },
-  "0546685204": { "name": "יעל שייה", "tickets": 1 },
-  "0545446019": { "name": "Adi Mendelman", "tickets": 1 },
-  "0524806280": { "name": "גל חיקי", "tickets": 1 },
-  "0525856754": { "name": "Hadar Ishay", "tickets": 1 },
-  "0546347745": { "name": "Eiar Bitay", "tickets": 1 },
-  "0542344415": { "name": "שחר שטיל", "tickets": 1 },
-  "0507999084": { "name": "עדי לוין", "tickets": 1 },
-  "0506303363": { "name": "קרן רוזנשטיין", "tickets": 1 },
-  "0507613684": { "name": "Lihi Zadik", "tickets": 1 },
-  "0548343622": { "name": "נבט גמליאל", "tickets": 1 },
-  "0544444359": { "name": "אופיר שרון כהן", "tickets": 1 },
-  "0545524147": { "name": "רותם רוטשס", "tickets": 1 },
-  "0545656053": { "name": "May Blonder", "tickets": 1 },
-  "0547772592": { "name": "מאי טרם", "tickets": 1 },
-  "0508275751": { "name": "Sapir Taragano", "tickets": 1 },
-  "0503494982": { "name": "רינה לירון אסאיג", "tickets": 2 },
-  "0542392665": { "name": "אור כהן", "tickets": 1 },
-  "0509323132": { "name": "יובל ויזל", "tickets": 1 },
-  "0528746188": { "name": "Mika Bell", "tickets": 1 },
-  "0506840850": { "name": "נוי גובי", "tickets": 1 },
-  "0525959302": { "name": "Maya Kaufman", "tickets": 1 },
-  "0545975260": { "name": "מרינה יעקובוב", "tickets": 1 },
-  "0548158892": { "name": "Itamar Amitai", "tickets": 1 },
-  "0543157121": { "name": "נופר אהרוני", "tickets": 1 },
-  "0547371736": { "name": "Anat Robinson", "tickets": 1 },
-  "0544445546": { "name": "Tal Zamir", "tickets": 3 },
-  "0542526348": { "name": "רז טפירו", "tickets": 1 },
-  "0549063651": { "name": "עומר ישראלי", "tickets": 1 },
-  "0542572556": { "name": "תומר גבריאל", "tickets": 1 },
-  "0528378400": { "name": "קרן יגר", "tickets": 1 },
-  "0542335585": { "name": "Algom Gabriel", "tickets": 1 },
-  "0502627333": { "name": "Oshrat Shabtai", "tickets": 1 },
-  "0542116068": { "name": "לינור מוסקוביץ", "tickets": 1 },
-  "0544662654": { "name": "shir baran", "tickets": 1 },
-  "0543540241": { "name": "יערה הנמן", "tickets": 1 },
-  "0524485590": { "name": "תומר ליבר", "tickets": 1 },
-  "0545273371": { "name": "ליאן כהן", "tickets": 1 },
-  "0546886032": { "name": "אופיר ישראל", "tickets": 1 },
-  "0528281772": { "name": "Ido Rom", "tickets": 2 },
-  "0544241002": { "name": "מאור יהלומי", "tickets": 1 },
-  "0507959055": { "name": "Ofir Olivenbaum", "tickets": 2 },
-  "0503313852": { "name": "נתן מור", "tickets": 1 },
-  "0543366592": { "name": "בועז בלומנטל", "tickets": 2 },
-  "0544227255": { "name": "ירין בניאן", "tickets": 2 },
-  "0502227954": { "name": "Roei Dayan", "tickets": 1 },
-  "0525956959": { "name": "noam david", "tickets": 1 },
-  "0523321025": { "name": "אביב בן אור", "tickets": 1 },
-  "0546785178": { "name": "מאיה ארדיטי", "tickets": 1 },
-  "0547225578": { "name": "Daniel Guttman", "tickets": 1 },
-  "0526458550": { "name": "Shay Megera", "tickets": 2 },
-  "0523696166": { "name": "טליה בן לולו", "tickets": 1 },
-  "0546887575": { "name": "ליאור צביאלי", "tickets": 1 },
-  "0548051735": { "name": "רון אלי", "tickets": 1 },
-  "0507122201": { "name": "ירון הרוש", "tickets": 1 },
-  "0543964751": { "name": "גיא חניה", "tickets": 1 },
-  "0506972100": { "name": "גילי אביוב", "tickets": 1 },
-  "0525874146": { "name": "Or Manzur", "tickets": 1 },
-  "0506560097": { "name": "עמית מליכס", "tickets": 1 },
-  "0542122881": { "name": "גילי גפן", "tickets": 1 },
-  "0528008874": { "name": "אלעד בנישו", "tickets": 1 },
-  "0504665333": { "name": "בן שחם", "tickets": 1 },
-  "0526888685": { "name": "שקד כהן", "tickets": 1 },
-  "0526245444": { "name": "אסתר באשר", "tickets": 1 },
-  "0528701646": { "name": "יואב חברוני", "tickets": 1 },
-  "0546220041": { "name": "יונתן דקל", "tickets": 1 },
-  "0546220503": { "name": "צליל טלמור", "tickets": 1 },
-  "0525293383": { "name": "אורטל פרפרה", "tickets": 1 },
-  "0525293383": { "name": "יובל ים", "tickets": 1 },
-  "0542423691": { "name": "גלעד שחם", "tickets": 1 },
-  "0502223793": { "name": "אלי לגזיאל", "tickets": 1 },
-  "0508445593": { "name": "צליל טלמור", "tickets": 1 },
-  "0525285358": { "name": "ירין אסרף", "tickets": 2 },
-  "0544329192": { "name": "זיו זפרני", "tickets": 1 },
-  "0547731110": { "name": "עידן ילוב", "tickets": 1 },
-  "0509481234": { "name": "דנה מימון", "tickets": 1 },
-  "0526008851": { "name": "אלון רייכמן", "tickets": 1 },
-  "0523314932": { "name": "מאי חגי", "tickets": 1 },
-  "0528057544": { "name": "נויה אלון", "tickets": 1 },
-  "0505302688": { "name": "רן שמר", "tickets": 1 },
-};
+  "0505836586": {
+    "name": "דניאל שומרון",
+    "tickets": 1
+  },
+  "0544546873": {
+    "name": "ליאור נונו",
+    "tickets": 1
+  },
+  "0505575950": {
+    "name": "Noa Shani",
+    "tickets": 1
+  },
+  "0547532150": {
+    "name": "Yana Shenkar",
+    "tickets": 1
+  },
+  "0502000636": {
+    "name": "Michal Tal",
+    "tickets": 1
+  },
+  "0545793184": {
+    "name": "Yarden Mizrahi",
+    "tickets": 1
+  },
+  "0526165830": {
+    "name": "קלייר איטלסון",
+    "tickets": 1
+  },
+  "0506557895": {
+    "name": "Daniel Sinai",
+    "tickets": 1
+  },
+  "0526884232": {
+    "name": "Eli Mehaudy",
+    "tickets": 1
+  },
+  "0546803849": {
+    "name": "Orin Lugasi",
+    "tickets": 1
+  },
+  "0508445593": {
+    "name": "Eli Lagziel",
+    "tickets": 1
+  },
+  "0546814972": {
+    "name": "ענבל הוכנר",
+    "tickets": 1
+  },
+  "0547799970": {
+    "name": "יובל חמו",
+    "tickets": 1
+  },
+  "0508186992": {
+    "name": "Yehuda Levy",
+    "tickets": 1
+  },
+  "0503387906": {
+    "name": "שימי אברמוב",
+    "tickets": 1
+  },
+  "0542288250": {
+    "name": "Guy Zuck",
+    "tickets": 1
+  },
+  "0528358554": {
+    "name": "Marina Breyl",
+    "tickets": 1
+  },
+  "0546977657": {
+    "name": "ליאור פרוטר",
+    "tickets": 1
+  },
+  "0525610865": {
+    "name": "David Nesimi",
+    "tickets": 2
+  },
+  "0506560097": {
+    "name": "עמית מליכס",
+    "tickets": 1
+  },
+  "0509255015": {
+    "name": "ליפז אברהם",
+    "tickets": 3
+  },
+  "0543555537": {
+    "name": "ספיר עידו",
+    "tickets": 1
+  },
+  "0548023399": {
+    "name": "גילי מלינוביץ",
+    "tickets": 1
+  },
+  "0522947824": {
+    "name": "Ofir Ziman",
+    "tickets": 1
+  },
+  "0547571281": {
+    "name": "Omer Dor",
+    "tickets": 2
+  },
+  "0507394117": {
+    "name": "Yanai Tal",
+    "tickets": 2
+  },
+  "0523229516": {
+    "name": "Moran Yana",
+    "tickets": 1
+  },
+  "0505244805": {
+    "name": "Michal Helman",
+    "tickets": 2
+  },
+  "0547480870": {
+    "name": "מעיין גבאי",
+    "tickets": 1
+  },
+  "0506574001": {
+    "name": "Moria Harush",
+    "tickets": 1
+  },
+  "0544878929": {
+    "name": "Adi Kosher",
+    "tickets": 1
+  },
+  "0548158892": {
+    "name": "Itamar Amitai",
+    "tickets": 1
+  },
+  "0508463230": {
+    "name": "reut david",
+    "tickets": 1
+  },
+  "0546396993": {
+    "name": "עמית איל",
+    "tickets": 1
+  },
+  "0528242847": {
+    "name": "גלית הוברמו",
+    "tickets": 1
+  },
+  "0545822287": {
+    "name": "יעל העליון",
+    "tickets": 1
+  },
+  "0507959055": {
+    "name": "Ofir Olivenbaum",
+    "tickets": 2
+  },
+  "0508801291": {
+    "name": "Rotem Gabay",
+    "tickets": 1
+  },
+  "0524778688": {
+    "name": "Anat Fishbain",
+    "tickets": 1
+  },
+  "0546445225": {
+    "name": "Eli Shmuel",
+    "tickets": 1
+  },
+  "0525874146": {
+    "name": "Or Manzur",
+    "tickets": 2
+  },
+  "0544830941": {
+    "name": "ליאור בן יוסף",
+    "tickets": 1
+  },
+  "0545656053": {
+    "name": "May Blonder",
+    "tickets": 1
+  },
+  "0505302688": {
+    "name": "Ran Shemer",
+    "tickets": 1
+  },
+  "0503278425": {
+    "name": "יוגב כהן",
+    "tickets": 1
+  },
+  "0544959200": {
+    "name": "Tal Malka",
+    "tickets": 1
+  },
+  "0544227255": {
+    "name": "Yarin Banian",
+    "tickets": 2
+  },
+  "0504503054": {
+    "name": "סיגל מוסקוביץ",
+    "tickets": 2
+  },
+  "0528932302": {
+    "name": "Gal Parizat",
+    "tickets": 1
+  },
+  "0544241002": {
+    "name": "מאור יהלומי",
+    "tickets": 1
+  },
+  "0522835427": {
+    "name": "Moran Lavi",
+    "tickets": 1
+  },
+  "0542479899": {
+    "name": "ניצן כהן",
+    "tickets": 1
+  },
+  "0507633737": {
+    "name": "עמית חן",
+    "tickets": 1
+  },
+  "0544213219": {
+    "name": "Shachar Brookstein",
+    "tickets": 1
+  },
+  "0545818860": {
+    "name": "Michal Halfon",
+    "tickets": 1
+  },
+  "0544467888": {
+    "name": "Omer Biran",
+    "tickets": 1
+  },
+  "0525318800": {
+    "name": "דנה זלמנוביץ",
+    "tickets": 2
+  },
+  "0506972100": {
+    "name": "גילי אביוב",
+    "tickets": 1
+  },
+  "0504665333": {
+    "name": "בן שחם",
+    "tickets": 1
+  },
+  "0528008874": {
+    "name": "אלעד בנישו",
+    "tickets": 1
+  },
+  "0507933140": {
+    "name": "מיכאל ברומשטיין",
+    "tickets": 1
+  },
+  "0547687837": {
+    "name": "Jonathan Buchwald",
+    "tickets": 2
+  },
+  "0525774714": {
+    "name": "Avi Faine",
+    "tickets": 1
+  },
+  "0522734744": {
+    "name": "Roi Even-ari",
+    "tickets": 1
+  },
+  "0535290490": {
+    "name": "סיון לוי",
+    "tickets": 1
+  },
+  "0548827781": {
+    "name": "Einat Levy",
+    "tickets": 1
+  },
+  "0503061331": {
+    "name": "Martin Abadi",
+    "tickets": 1
+  },
+  "0507560356": {
+    "name": "Or Wilder",
+    "tickets": 1
+  },
+  "0524380096": {
+    "name": "avinoam roz",
+    "tickets": 1
+  },
+  "0523970116": {
+    "name": "Yanir Calisar",
+    "tickets": 3
+  },
+  "0546456652": {
+    "name": "eitan levinstein",
+    "tickets": 1
+  },
+  "0507226573": {
+    "name": "Ohad Miron",
+    "tickets": 1
+  },
+  "0536290059": {
+    "name": "Sapir Darvish",
+    "tickets": 1
+  },
+  "0526308022": {
+    "name": "Elor Siso",
+    "tickets": 1
+  },
+  "0548009363": {
+    "name": "Emma Smira",
+    "tickets": 3
+  },
+  "0548040641": {
+    "name": "טל לביא",
+    "tickets": 1
+  },
+  "0544435368": {
+    "name": "דולב קליינר",
+    "tickets": 1
+  },
+  "0523348262": {
+    "name": "Tzvi Mints",
+    "tickets": 1
+  },
+  "0503313852": {
+    "name": "נתן מור",
+    "tickets": 1
+  },
+  "0545673611": {
+    "name": "Lior Zeira",
+    "tickets": 4
+  },
+  "0545470222": {
+    "name": "נתנאל מרדכי",
+    "tickets": 1
+  },
+  "0544457923": {
+    "name": "Or Malca",
+    "tickets": 1
+  },
+  "0504080824": {
+    "name": "אור סלאב",
+    "tickets": 1
+  },
+  "0507430845": {
+    "name": "Tamara Markovich",
+    "tickets": 1
+  },
+  "0522778341": {
+    "name": "Noa Markfeld",
+    "tickets": 2
+  },
+  "0523922020": {
+    "name": "רתם גרמן",
+    "tickets": 2
+  },
+  "0547946246": {
+    "name": "Tomer Shtick",
+    "tickets": 1
+  },
+  "0523059966": {
+    "name": "Ofer Yaoz",
+    "tickets": 1
+  },
+  "0546268856": {
+    "name": "Mor Halfon",
+    "tickets": 1
+  },
+  "0503363637": {
+    "name": "Noy Atia",
+    "tickets": 1
+  },
+  "0524795395": {
+    "name": "עמית אסייג",
+    "tickets": 2
+  },
+  "0548121500": {
+    "name": "נוי גרין",
+    "tickets": 1
+  },
+  "0506618183": {
+    "name": "מאיה קמינסקי",
+    "tickets": 1
+  },
+  "0504404541": {
+    "name": "Hila Francis",
+    "tickets": 1
+  },
+  "0526896967": {
+    "name": "עדי מירון",
+    "tickets": 1
+  },
+  "0544329192": {
+    "name": "זיו זפרני",
+    "tickets": 1
+  },
+  "0526261101": {
+    "name": "דנה קמישב",
+    "tickets": 1
+  },
+  "0506426475": {
+    "name": "Shiran Kol-Moshe",
+    "tickets": 1
+  },
+  "0508187867": {
+    "name": "Rotem Yosef",
+    "tickets": 1
+  },
+  "0546200623": {
+    "name": "Irit Moshe",
+    "tickets": 1
+  },
+  "0528281772": {
+    "name": "Ido Rom",
+    "tickets": 1
+  },
+  "0548733436": {
+    "name": "ויטאלי קובטוננקו",
+    "tickets": 1
+  },
+  "0509661692": {
+    "name": "Gal Graziani",
+    "tickets": 1
+  },
+  "0543191215": {
+    "name": "גיל הראל",
+    "tickets": 1
+  },
+  "0504359914": {
+    "name": "עידו מהגר",
+    "tickets": 1
+  },
+  "0506595446": {
+    "name": "moti Tehrani",
+    "tickets": 1
+  },
+  "0526840948": {
+    "name": "Bar Dadon",
+    "tickets": 1
+  },
+  "0506655520": {
+    "name": "Oren Estraich",
+    "tickets": 2
+  },
+  "0504381234": {
+    "name": "Linoy Kadosh",
+    "tickets": 1
+  },
+  "0524722494": {
+    "name": "שלומי גרינברג",
+    "tickets": 1
+  },
+  "0546336936": {
+    "name": "מורן רם",
+    "tickets": 1
+  },
+  "0532844408": {
+    "name": "Eyal Elad",
+    "tickets": 1
+  },
+  "0544828120": {
+    "name": "Eden Shikli",
+    "tickets": 1
+  },
+  "0546266529": {
+    "name": "Chloe Ze",
+    "tickets": 1
+  },
+  "0584753287": {
+    "name": "Samuel Hagege",
+    "tickets": 1
+  },
+  "0584402300": {
+    "name": "לוקה בן סעיד",
+    "tickets": 1
+  },
+  "0546293108": {
+    "name": "Maya Parizer",
+    "tickets": 1
+  }
+}
+
+
 
 // Array of phone numbers for guests who have birthdays
 // When the host validates a code for these guests, a special birthday notification will be shown
 const birthdayGuests = [
   // Add phone numbers here (e.g., "0524370064")
-  "0506972100", "0526245444", "0506560097"
+  "0523970116"
 ];
 
 if (typeof module !== 'undefined' && module.exports) {
