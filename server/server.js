@@ -10,8 +10,10 @@ const app = express();
 app.set('trust proxy', 1); // trust first proxy for correct IP detection behind Render/Heroku/etc.
 const PORT = process.env.PORT || 3000;
 
-// Import guest data
-const { guestsByPhone, birthdayGuests } = require('./guests.js');
+// Import guest data — guests.js is a raw JSON array, not a CommonJS module
+const fs = require('fs');
+const guestsArray = JSON.parse(fs.readFileSync(path.join(__dirname, 'guests.js'), 'utf8'));
+const guestsByPhone = Object.assign({}, ...guestsArray);
 
 // In-memory cache for validated entries
 const validatedEntries = new Map();
@@ -427,21 +429,7 @@ app.post('/api/validate-code', (req, res) => {
             
             validatedEntries.set(guestPhoneKey, foundEntry); // Update the map entry
 
-            // Check if this guest is a birthday guest
-            // Normalize phone numbers by removing all non-digits and ensuring they're strings
-            const cleanedPhone = String(guestPhoneKey || '').replace(/\D/g, '');
-            const normalizedBirthdayGuests = birthdayGuests.map(phone => String(phone || '').replace(/\D/g, ''));
-            const isBirthdayGuest = normalizedBirthdayGuests.includes(cleanedPhone);
-            
-            // Debug logging
-            console.log('🎂 Birthday check:', {
-                guestPhoneKey,
-                cleanedPhone,
-                birthdayGuests,
-                normalizedBirthdayGuests,
-                isBirthdayGuest,
-                guestName: foundEntry.name
-            });
+            const isBirthdayGuest = guestsByPhone[guestPhoneKey]?.isBirthday || false;
 
             return res.json({
                 success: true,
