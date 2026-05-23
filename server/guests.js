@@ -1056,12 +1056,5 @@
       "isBirthday": false
     }
   },
-  {
-    "123456789": {
-      "name": "בדיקה",
-      "tickets": 1,
-      "isBirthday": false
-    }
-  },
 ]
 
