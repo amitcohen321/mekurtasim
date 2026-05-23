@@ -1055,6 +1055,5 @@
       "tickets": 1,
       "isBirthday": false
     }
-  },
+  }
 ]
-
