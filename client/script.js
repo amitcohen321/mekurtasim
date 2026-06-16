@@ -301,30 +301,68 @@ phoneInput.addEventListener('input', (e) => {
 });
 
 // התמקדות בשדה הטלפון בטעינת העמוד
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
     // Check if user was already validated
     const previousValidation = localStorage.getItem('partyValidated');
     if (previousValidation) {
         try {
             const validationData = JSON.parse(previousValidation);
-            if (validationData.validated && validationData.guest) {
-                // Hide form and show success screen
+            if (validationData.validated && validationData.guest && validationData.guest.phone) {
+                // Re-validate with server to ensure this code belongs to the current party
+                showLoader();
                 form.classList.add('hidden');
+                if (phoneLabel) phoneLabel.classList.add('hidden');
 
-                // Hide phone label
-                if (phoneLabel) {
-                    phoneLabel.classList.add('hidden');
+                try {
+                    const response = await fetch(`${API_URL}/validate`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ phone: validationData.guest.phone })
+                    });
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        // New party — fresh validation with a new code
+                        localStorage.setItem('partyValidated', JSON.stringify({
+                            guest: data.guest,
+                            timestamp: new Date().toISOString(),
+                            validated: true
+                        }));
+                        showSuccess(data.guest);
+                    } else if (response.status === 403 && data.entryCode) {
+                        // Same party — already validated, use the server's code
+                        const guest = {
+                            name: data.validatedBy,
+                            phone: data.phone,
+                            tickets: data.tickets,
+                            entryCode: data.entryCode
+                        };
+                        localStorage.setItem('partyValidated', JSON.stringify({
+                            guest: guest,
+                            timestamp: new Date().toISOString(),
+                            validated: true
+                        }));
+                        showSuccess(guest);
+                        const alreadyValidatedMsg = document.createElement('div');
+                        alreadyValidatedMsg.style.cssText = 'text-align: center; margin-top: 20px; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px; font-size: 0.9rem; opacity: 0.8;';
+                        alreadyValidatedMsg.innerHTML = 'כבר אומתת בעבר - אין צורך לחפש שוב 👍';
+                        resultDiv.appendChild(alreadyValidatedMsg);
+                    } else {
+                        // Not in the guest list for this party — clear stale cache
+                        localStorage.removeItem('partyValidated');
+                        resultDiv.classList.add('hidden');
+                        form.classList.remove('hidden');
+                        if (phoneLabel) phoneLabel.classList.remove('hidden');
+                        phoneInput.focus();
+                    }
+                } catch (networkError) {
+                    // Network error — clear stale cache and show form
+                    localStorage.removeItem('partyValidated');
+                    resultDiv.classList.add('hidden');
+                    form.classList.remove('hidden');
+                    if (phoneLabel) phoneLabel.classList.remove('hidden');
+                    phoneInput.focus();
                 }
-
-                // Show previous success
-                showSuccess(validationData.guest);
-
-                // Show a different message indicating they're already validated
-                const alreadyValidatedMsg = document.createElement('div');
-                alreadyValidatedMsg.style.cssText = 'text-align: center; margin-top: 20px; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px; font-size: 0.9rem; opacity: 0.8;';
-                alreadyValidatedMsg.innerHTML = 'כבר אומתת בעבר - אין צורך לחפש שוב 👍';
-                resultDiv.appendChild(alreadyValidatedMsg);
-
                 return;
             }
         } catch (e) {

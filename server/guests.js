@@ -4,7 +4,7 @@
       "name": "Moran Yana",
       "tickets": 1,
       "isBirthday": false
-    }
+    },
   },
   {
     "0547571281": {
@@ -1058,7 +1058,7 @@
   },
   {
     "123456789": {
-      "name": "טסט",
+      "name": "יוני",
       "tickets": 1,
       "isBirthday": false
     }
