@@ -24,6 +24,28 @@ submitBtn.disabled = true;
 // Track current guest
 let currentGuest = null;
 
+// Read the list of codes already issued to this device for a given phone.
+// Returns [] when the cache belongs to a different number.
+function getCachedCodes(phone) {
+    try {
+        const v = JSON.parse(localStorage.getItem('partyValidated') || '{}');
+        if (phone && v.guest && v.guest.phone !== phone) return [];
+        return Array.isArray(v.codes) ? v.codes : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+// Persist the current guest + all codes issued to this device
+function saveCache(guest, codes) {
+    localStorage.setItem('partyValidated', JSON.stringify({
+        guest: guest,
+        codes: codes,
+        timestamp: new Date().toISOString(),
+        validated: true
+    }));
+}
+
 // Helper function to clean phone number
 function cleanPhoneNumber(phone) {
     return phone.replace(/\D/g, '');
@@ -55,6 +77,19 @@ function showSuccess(guest) {
     // Set current guest for message sharing
     currentGuest = guest;
 
+    // Ticket / code bookkeeping for multi-ticket numbers
+    const totalTickets = guest.totalTickets || guest.tickets || 1;
+    const ticketNumber = guest.ticketNumber || 1;
+    // Merge the freshly returned code into this number's running list of codes
+    const allCodes = getCachedCodes(guest.phone);
+    if (guest.entryCode && !allCodes.includes(guest.entryCode)) {
+        allCodes.push(guest.entryCode);
+    }
+    // How many codes are still available to issue for this number
+    const remaining = (typeof guest.remaining === 'number')
+        ? guest.remaining
+        : Math.max(0, totalTickets - allCodes.length);
+
     resultDiv.className = 'result success';
     resultDiv.innerHTML = `
         <div style="margin-bottom: 20px;">
@@ -84,19 +119,30 @@ function showSuccess(guest) {
 
         ${guest.entryCode ? `
         <div class="entry-code-section" style="background: rgba(255,255,255,0.15); padding: 20px; margin: 20px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.3); text-align: center;">
-            <div style="font-size: 1.1rem; margin-bottom: 12px; font-weight: bold;">🔢 קוד כניסה למסיבה:</div>
+            <div style="font-size: 1.1rem; margin-bottom: 12px; font-weight: bold;">🔢 ${totalTickets > 1 ? `קוד כניסה ${ticketNumber} מתוך ${totalTickets}:` : 'קוד כניסה למסיבה:'}</div>
             <div style="background: white; padding: 20px; border-radius: 8px; display: inline-block; margin: 12px 0; border: 3px solid #FFD700;">
                 <div style="font-size: 3rem; font-weight: bold; color: #000; font-family: 'Courier New', monospace; letter-spacing: 8px;">${guest.entryCode}</div>
             </div>
             <div style="font-size: 0.9rem; color: rgba(255,255,255,0.8); margin-top: 8px; line-height: 1.4;">
                 <strong>הראו קוד זה למארחת בכניסה</strong><br>
+                ${totalTickets > 1 ? 'כל אורח נכנס עם קוד נפרד — שמרו את כל הקודים.' : ''}
             </div>
+            ${allCodes.length > 1 ? `
+            <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 0.9rem;">
+                כל הקודים שהופקו למספר זה:<br>
+                <span style="font-family: 'Courier New', monospace; font-size: 1.2rem; letter-spacing: 3px; font-weight: bold;">${allCodes.join(' · ')}</span>
+            </div>` : ''}
         </div>
+        ${remaining > 0 ? `
+        <button id="get-another-code-btn" style="background: linear-gradient(135deg, #FF9C42, #FFD700); color: #000; border: none; padding: 14px 20px; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 700; width: 100%; margin-bottom: 12px;">
+            ➕ קבלת קוד לאורח נוסף (נותרו ${remaining})
+        </button>
+        ` : ''}
         ` : ''}
 
         <div class="welcome-text">
         </div>
-        
+
 
     `;
 
@@ -106,18 +152,48 @@ function showSuccess(guest) {
     // Add event listener for share message button
     document.getElementById('share-message-btn').addEventListener('click', shareMessage);
 
+    // "Get another code" button — issues the next code for this same number
+    const anotherBtn = document.getElementById('get-another-code-btn');
+    if (anotherBtn) {
+        anotherBtn.addEventListener('click', getAnotherCode);
+    }
+
     if (navigator.vibrate) {
         navigator.vibrate([100, 50, 100]);
     }
 
-    // Store successful validation in localStorage
-    localStorage.setItem('partyValidated', JSON.stringify({
-        guest: guest,
-        timestamp: new Date().toISOString(),
-        validated: true
-    }));
+    // Store successful validation (with all issued codes) in localStorage
+    saveCache(guest, allCodes);
 
     logSuccessfulEntry(guest);
+}
+
+// Issue the next entry code for the same phone number (another guest)
+async function getAnotherCode() {
+    if (!currentGuest || !currentGuest.phone) return;
+
+    showLoader();
+
+    try {
+        const response = await fetch(`${API_URL}/validate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: currentGuest.phone })
+        });
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            showSuccess(data.guest);
+        } else if (response.status === 403 && data.allIssued) {
+            // No codes left — re-render current state (button will be gone)
+            showSuccess(currentGuest);
+        } else {
+            showError(data.message || 'שגיאה בקבלת קוד נוסף');
+        }
+    } catch (error) {
+        console.error('Error getting another code:', error);
+        showError('שגיאה בחיבור לשרת');
+    }
 }
 
 // הצג תוצאת כישלון
@@ -307,8 +383,10 @@ window.addEventListener('load', async () => {
     if (previousValidation) {
         try {
             const validationData = JSON.parse(previousValidation);
-            if (validationData.validated && validationData.guest && validationData.guest.phone) {
-                // Re-validate with server to ensure this code belongs to the current party
+            const cachedCodes = Array.isArray(validationData.codes) ? validationData.codes : [];
+            if (validationData.validated && validationData.guest && validationData.guest.phone && cachedCodes.length) {
+                // LOOKUP the cached code with the server — this re-displays it without
+                // consuming a new code, and confirms it still belongs to this party.
                 showLoader();
                 form.classList.add('hidden');
                 if (phoneLabel) phoneLabel.classList.add('hidden');
@@ -317,38 +395,22 @@ window.addEventListener('load', async () => {
                     const response = await fetch(`${API_URL}/validate`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ phone: validationData.guest.phone })
+                        body: JSON.stringify({
+                            phone: validationData.guest.phone,
+                            code: cachedCodes[cachedCodes.length - 1]
+                        })
                     });
                     const data = await response.json();
 
                     if (response.ok && data.success) {
-                        // New party — fresh validation with a new code
-                        localStorage.setItem('partyValidated', JSON.stringify({
-                            guest: data.guest,
-                            timestamp: new Date().toISOString(),
-                            validated: true
-                        }));
+                        // Code still valid — re-display it
                         showSuccess(data.guest);
-                    } else if (response.status === 403 && data.entryCode) {
-                        // Same party — already validated, use the server's code
-                        const guest = {
-                            name: data.validatedBy,
-                            phone: data.phone,
-                            tickets: data.tickets,
-                            entryCode: data.entryCode
-                        };
-                        localStorage.setItem('partyValidated', JSON.stringify({
-                            guest: guest,
-                            timestamp: new Date().toISOString(),
-                            validated: true
-                        }));
-                        showSuccess(guest);
                         const alreadyValidatedMsg = document.createElement('div');
                         alreadyValidatedMsg.style.cssText = 'text-align: center; margin-top: 20px; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px; font-size: 0.9rem; opacity: 0.8;';
                         alreadyValidatedMsg.innerHTML = 'כבר אומתת בעבר - אין צורך לחפש שוב 👍';
                         resultDiv.appendChild(alreadyValidatedMsg);
                     } else {
-                        // Not in the guest list for this party — clear stale cache
+                        // Code no longer valid (new party / not in list) — clear stale cache
                         localStorage.removeItem('partyValidated');
                         resultDiv.classList.add('hidden');
                         form.classList.remove('hidden');

@@ -954,8 +954,8 @@
         window.closeBirthdayModal = closeBirthdayModal;
 
         // Function to show desk payment modal
-        function showDeskPaymentModal(guestName, ticketsValidated) {
-            console.log('💰 showDeskPaymentModal called with:', guestName, ticketsValidated);
+        function showDeskPaymentModal(guestName, ticketsValidated, entrySummary) {
+            console.log('💰 showDeskPaymentModal called with:', guestName, ticketsValidated, entrySummary);
 
             const modalHTML = `
                 <div id="desk-payment-modal-overlay" style="position:fixed !important;top:0 !important;left:0 !important;right:0 !important;bottom:0 !important;background:rgba(0,0,0,0.95) !important;z-index:999999 !important;display:flex !important;justify-content:center !important;align-items:center !important;padding:20px !important;margin:0 !important;width:100vw !important;height:100vh !important;">
@@ -964,7 +964,7 @@
                         <div style="font-size:2.5rem;font-weight:bold;color:#000;margin-bottom:20px;">תשלום בדלפק!</div>
                         <div style="font-size:1.2rem;color:#000;margin-bottom:25px;background:rgba(255,255,255,0.9);padding:15px;border-radius:10px;border:2px solid #000;">
                             <strong>קוד אומת בהצלחה עבור: ${guestName || 'אורח'}</strong><br>
-                            ${ticketsValidated || ''} כרטיס(ים) נוצלו<br><br>
+                            ${entrySummary || (ticketsValidated || '') + ' כרטיס(ים) נוצלו'}<br><br>
                             <strong style="color:#FF6B6B;font-size:1.3rem;">⚠️ יש לגבות תשלום בדלפק</strong>
                         </div>
                         <button id="close-desk-payment-modal" 
@@ -1174,12 +1174,12 @@
                                 </button>
                             </td>
                             <td style="padding:${isMobile ? '14px 8px' : '14px'}; font-size: ${isMobile ? '1rem' : '0.9rem'}; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                <button onclick='toggleGuestEntry(${JSON.stringify(g).replace(/'/g, "&#39;")}, event)' 
-                                        style="background: ${g.entered ? '#4CAF50' : '#666'}; color: white; border: none; border-radius: 4px; padding: ${isMobile ? '8px 10px' : '6px 12px'}; cursor: pointer; font-size: ${isMobile ? '0.9rem' : '0.8rem'}; min-width: ${isMobile ? '44px' : '40px'}; height: ${isMobile ? '44px' : '36px'}; transition: background 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); touch-action: manipulation;"
-                                        onmouseover="this.style.transform='scale(1.05)'" 
+                                <button onclick='toggleGuestEntry(${JSON.stringify(g).replace(/'/g, "&#39;")}, event)'
+                                        style="background: ${g.entered ? '#4CAF50' : ((g.enteredCount || 0) > 0 ? '#FF9C42' : '#666')}; color: white; border: none; border-radius: 4px; padding: ${isMobile ? '8px 10px' : '6px 12px'}; cursor: pointer; font-size: ${isMobile ? '0.9rem' : '0.8rem'}; min-width: ${isMobile ? '44px' : '40px'}; height: ${isMobile ? '44px' : '36px'}; transition: background 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); touch-action: manipulation;"
+                                        onmouseover="this.style.transform='scale(1.05)'"
                                         onmouseout="this.style.transform='scale(1)'"
-                                        title="${g.entered ? 'לחץ לביטול כניסה' : 'לחץ לסמן כניסה'}">
-                                    ${g.entered ? '✓' : '-'}
+                                        title="${g.entered ? 'לחץ לביטול כניסה' : ((g.enteredCount || 0) > 0 ? `נכנסו ${g.enteredCount} מתוך ${g.tickets} — לחץ לביטול` : 'לחץ לסמן כניסה')}">
+                                    ${g.entered ? '✓' : ((g.enteredCount || 0) > 0 ? `${g.enteredCount}/${g.tickets}` : '-')}
                                 </button>
                             </td>
                         </tr>
@@ -1343,35 +1343,30 @@
             }
         }
 
-        // Function to mark guest as entered via API
+        // Mark the whole guest (all issued codes) as entered via API.
+        // For admitting one person at a time, use the 4-digit code screen instead.
         async function markGuestAsEntered(phone) {
             if (!phone) return;
 
             try {
-                // Find the guest's entry code from the current data
-                let entryCode = null;
-                if (window.allGuests) {
-                    const guest = window.allGuests.find(g => (g.realPhone || g.phone) === phone);
-                    entryCode = guest ? guest.entryCode : null;
-                }
-
-                if (!entryCode) {
-                    alert('לא ניתן למצוא קוד כניסה עבור אורח זה');
-                    return;
-                }
-
-                const response = await fetch('/api/validate-code', {
-                    method: 'POST',
+                const cleanedPhone = String(phone).replace(/\D/g, '');
+                const response = await fetch(`/api/guests/${cleanedPhone}/entry`, {
+                    method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ code: entryCode })
+                    body: JSON.stringify({ entered: true })
                 });
 
                 const result = await response.json();
 
                 if (result.success) {
-                    alert(`אורח ${result.guestName} אומת בהצלחה לכניסה!`);
+                    let msg = `אורח ${result.guest.name} סומן כנכנס!`;
+                    const g = result.guest;
+                    if ((g.enteredCount || 0) > 1) {
+                        msg += ` (${g.enteredCount} כרטיסים)`;
+                    }
+                    alert(msg);
                     closeModal();
                     await loadData(); // Refresh all data
                 } else {
@@ -1642,7 +1637,15 @@
 
             // Determine status texts and colors
             const phoneValidatedText = guest.validated ? `✅ כן (${formatDate(guest.phoneValidationTimestamp)})` : '❌ לא';
-            const entryStatusText = guest.entered ? `✅ כן (${formatDate(guest.entryTimestamp)})` : '❌ לא';
+            const enteredCount = guest.enteredCount || 0;
+            let entryStatusText;
+            if (guest.entered) {
+                entryStatusText = `✅ כן (${formatDate(guest.entryTimestamp)})`;
+            } else if (enteredCount > 0) {
+                entryStatusText = `🟠 חלקי — נכנסו ${enteredCount} מתוך ${guest.tickets} (${formatDate(guest.entryTimestamp)})`;
+            } else {
+                entryStatusText = '❌ לא';
+            }
             const entryValidatedByText = guest.enteredBy || 'טרם נכנס';
 
             modal.innerHTML = `
@@ -1667,8 +1670,12 @@
 
                     ${guest.validated ? `
                         <div class="guest-detail">
-                            <div class="guest-detail-label">קוד כניסה</div>
-                            <div class="guest-detail-value" style="font-family: monospace; font-size: 1.2rem; font-weight: bold; color: #FFD700; direction: ltr; letter-spacing: 4px;">${guest.entryCode || '-'}</div>
+                            <div class="guest-detail-label">${(guest.entryCodes && guest.entryCodes.length > 1) ? `קודי כניסה (${guest.issuedCount}/${guest.tickets} הופקו)` : 'קוד כניסה'}</div>
+                            <div class="guest-detail-value" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start;">
+                                ${(guest.entryCodes && guest.entryCodes.length)
+                                    ? guest.entryCodes.map(c => `<span style="font-family: monospace; font-size: 1.2rem; font-weight: bold; color: #FFD700; direction: ltr; letter-spacing: 3px; background: rgba(255,215,0,0.1); padding: 4px 10px; border-radius: 6px;">${c}</span>`).join('')
+                                    : '<span>-</span>'}
+                            </div>
                         </div>
                         <div class="guest-detail" style="text-align: center;">
                             <button onclick="markGuestAsEntered('${guest.realPhone || guest.phone}')"
@@ -1749,6 +1756,18 @@
 
                 const result = await response.json();
 
+                // For multi-ticket numbers, summarise how many of the group have entered
+                const buildEntrySummary = () => {
+                    const total = result.ticketsValidated || 0;
+                    if (total <= 1) return '';
+                    const remaining = typeof result.remainingTickets === 'number' ? result.remainingTickets : 0;
+                    if (remaining > 0) {
+                        return `נכנסו ${result.enteredCount}/${total} מהקבוצה, נותרו ${remaining}.`;
+                    }
+                    return `כל ${total} הכרטיסים נוצלו.`;
+                };
+                const entrySummary = buildEntrySummary();
+
                 if (response.ok && result.success) {
                     // Normalize phone number for comparison (remove any non-digits)
                     const normalizedPhone = (result.phone || '').replace(/\D/g, '');
@@ -1776,7 +1795,7 @@
                                 <div style="font-size:2.5rem;font-weight:bold;color:#000;margin-bottom:20px;">אורח יום הולדת!!!</div>
                                 <div style="font-size:1.2rem;color:#000;margin-bottom:15px;background:rgba(255,255,255,0.8);padding:15px;border-radius:10px;border:2px solid #000;">
                                     <strong>קוד אומת בהצלחה עבור: ${result.guestName || 'אורח'}</strong><br>
-                                    ${result.ticketsValidated || ''} כרטיס(ים) נוצלו
+                                    ${entrySummary || (result.ticketsValidated || '') + ' כרטיס(ים) נוצלו'}
                                 </div>
                                 <div style="font-size:1.4rem;font-weight:bold;color:#000;margin-bottom:25px;background:rgba(255,255,255,0.9);padding:15px;border-radius:10px;border:3px solid #000;">
                                     אורח יום הולדת<br>
@@ -1867,7 +1886,7 @@
                             console.error('Error showing birthday modal:', error);
                             alert('Error showing birthday modal: ' + error.message);
                             // Fallback to text notification
-                            statusEl.textContent = `קוד אומת בהצלחה עבור: ${result.guestName || 'אורח'}. ${result.ticketsValidated || ''} כרטיס(ים) נוצלו.`;
+                            statusEl.textContent = `קוד אומת בהצלחה עבור: ${result.guestName || 'אורח'}. ${entrySummary || (result.ticketsValidated || '') + ' כרטיס(ים) נוצלו.'}`;
                             statusEl.style.color = 'lightgreen';
                             codeInput.value = '';
                             await loadData();
@@ -1878,7 +1897,7 @@
                         console.log('Phone matched desk payment guest list');
                         try {
                             if (typeof showDeskPaymentModal === 'function') {
-                                showDeskPaymentModal(result.guestName || 'אורח', result.ticketsValidated || '');
+                                showDeskPaymentModal(result.guestName || 'אורח', result.ticketsValidated || '', entrySummary);
                             } else {
                                 console.error('showDeskPaymentModal is not a function!');
                                 // Fallback: create modal inline
@@ -1907,7 +1926,7 @@
                     } else {
                         // Regular guests get text notification only
                         console.log('Regular guest - showing text notification only');
-                        statusEl.textContent = `קוד אומת בהצלחה עבור: ${result.guestName || 'אורח'}. ${result.ticketsValidated || ''} כרטיס(ים) נוצלו.`;
+                        statusEl.textContent = `קוד אומת בהצלחה עבור: ${result.guestName || 'אורח'}. ${entrySummary || (result.ticketsValidated || '') + ' כרטיס(ים) נוצלו.'}`;
                         statusEl.style.color = 'lightgreen';
 
                         codeInput.value = ''; // Clear input

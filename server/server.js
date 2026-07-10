@@ -21,11 +21,36 @@ const validatedEntries = new Map();
 // In-memory storage for guest messages
 const guestMessages = [];
 
+// Each validated phone can hold up to `tickets` entry codes — one per person.
+// A code lives in entry.codes as { code, issuedAt, entered, entryTimestamp, enteredBy }.
+
+// True if this 4-digit code is already issued to ANY guest
+function codeExists(code) {
+    for (const entry of validatedEntries.values()) {
+        if ((entry.codes || []).some(c => c.code === code)) return true;
+    }
+    return false;
+}
+
+// Locate a single code across all entries → { phone, entry, codeObj } or null
+function findByCode(code) {
+    for (const [phone, entry] of validatedEntries.entries()) {
+        const codeObj = (entry.codes || []).find(c => c.code === code);
+        if (codeObj) return { phone, entry, codeObj };
+    }
+    return null;
+}
+
+// How many of an entry's issued codes have actually entered
+function enteredCountOf(entry) {
+    return (entry.codes || []).filter(c => c.entered).length;
+}
+
 // Function to generate unique 4-digit code
 function generateUniqueCode() {
     let code;
     let attempts = 0;
-    
+
     do {
         // Generate 4-digit code
         code = Math.floor(1000 + Math.random() * 9000).toString();
@@ -36,8 +61,8 @@ function generateUniqueCode() {
             code = (Date.now() % 9000 + 1000).toString();
             break;
         }
-    } while (Array.from(validatedEntries.values()).some(entry => entry.entryCode === code));
-    
+    } while (codeExists(code));
+
     return code;
 }
 
@@ -86,74 +111,123 @@ app.get('/login', (req, res) => {
   res.send('Admin cookie set. You can now access /admin.');
 });
 
-// API endpoint for phone validation
+// API endpoint for phone validation.
+// Two modes:
+//  - ISSUE (no `code` in body): hand out the next available entry code for this
+//    phone. A phone with N tickets can be submitted up to N times, each returning
+//    a fresh code, until all N are issued.
+//  - LOOKUP (`code` in body): re-display an already-issued code (e.g. on page
+//    reload) WITHOUT consuming a new one.
 app.post('/api/validate', (req, res) => {
-    const { phone, newsletter } = req.body;
-    
+    const { phone, newsletter, code } = req.body;
+
     if (!phone) {
-        return res.status(400).json({ 
-            success: false, 
-            message: 'מספר טלפון חסר' 
+        return res.status(400).json({
+            success: false,
+            message: 'מספר טלפון חסר'
         });
     }
-    
+
     // Clean phone number
     const cleanedPhone = phone.replace(/\D/g, '');
-    
+
     // Validate phone format
     if (cleanedPhone.length !== 10 || !cleanedPhone.startsWith('05')) {
-        return res.status(400).json({ 
-            success: false, 
-            message: 'מספר טלפון לא תקין' 
+        return res.status(400).json({
+            success: false,
+            message: 'מספר טלפון לא תקין'
         });
     }
-    
-    // Check if already validated
-    if (validatedEntries.has(cleanedPhone)) {
-        const entry = validatedEntries.get(cleanedPhone);
-        return res.status(403).json({ 
-            success: false, 
-            message: 'מספר זה כבר אומת בעבר',
+
+    // Check guest list
+    const guest = guestsByPhone[cleanedPhone];
+    if (!guest || guest.tickets <= 0) {
+        return res.status(404).json({
+            success: false,
+            message: 'לא נמצא ברשימת האורחים'
+        });
+    }
+
+    let entry = validatedEntries.get(cleanedPhone);
+
+    // LOOKUP mode — re-display a specific already-issued code, never issues a new one
+    if (code) {
+        const normalizedCode = String(code).trim();
+        const codeObj = entry ? (entry.codes || []).find(c => c.code === normalizedCode) : null;
+        if (codeObj) {
+            const ticketNumber = entry.codes.indexOf(codeObj) + 1;
+            return res.json({
+                success: true,
+                guest: {
+                    name: guest.name,
+                    phone: cleanedPhone,
+                    tickets: guest.tickets,
+                    entryCode: codeObj.code,
+                    ticketNumber: ticketNumber,
+                    totalTickets: guest.tickets,
+                    remaining: guest.tickets - entry.codes.length
+                }
+            });
+        }
+        // Code not found (server restarted, or stale cache) — tell client to reset
+        return res.status(404).json({
+            success: false,
+            message: 'הקוד אינו קיים יותר',
+            reset: true
+        });
+    }
+
+    // ISSUE mode — create the entry lazily, then hand out the next code
+    if (!entry) {
+        entry = {
+            name: guest.name,
+            tickets: guest.tickets,
+            phoneValidationTimestamp: new Date().toISOString(),
+            ip: req.ip,
+            newsletter: newsletter || false,
+            codes: [] // Each element: { code, issuedAt, entered, entryTimestamp, enteredBy }
+        };
+        validatedEntries.set(cleanedPhone, entry);
+    }
+    // Remember an opt-in even on a later submission
+    if (newsletter) entry.newsletter = true;
+
+    // All codes already handed out for this number
+    if (entry.codes.length >= entry.tickets) {
+        return res.status(403).json({
+            success: false,
+            message: `כל ${entry.tickets} הקודים עבור מספר זה כבר הונפקו`,
             validatedAt: entry.phoneValidationTimestamp,
             validatedBy: entry.name,
             phone: cleanedPhone,
             tickets: entry.tickets,
-            entryCode: entry.entryCode
+            issuedCount: entry.codes.length,
+            allIssued: true
         });
     }
-    
-    // Check guest list
-    const guest = guestsByPhone[cleanedPhone];
-    
-    if (guest && guest.tickets > 0) {
-        // Mark as validated (phone validation)
-        validatedEntries.set(cleanedPhone, {
+
+    // Issue the next code
+    const newCode = generateUniqueCode();
+    entry.codes.push({
+        code: newCode,
+        issuedAt: new Date().toISOString(),
+        entered: false,
+        entryTimestamp: null,
+        enteredBy: null
+    });
+    const ticketNumber = entry.codes.length;
+
+    return res.json({
+        success: true,
+        guest: {
             name: guest.name,
+            phone: cleanedPhone,
             tickets: guest.tickets,
-            phoneValidationTimestamp: new Date().toISOString(), // Renamed for clarity
-            ip: req.ip,
-            entryCode: generateUniqueCode(),
-            entered: false,                 // Tracks if guest has actually entered
-            entryTimestamp: null,           // Timestamp for actual entry
-            enteredBy: null,                // Method/admin who confirmed entry
-            newsletter: newsletter || false // Newsletter preference
-        });
-        
-        return res.json({
-            success: true,
-            guest: {
-                name: guest.name,
-                phone: cleanedPhone,
-                tickets: guest.tickets,
-                entryCode: validatedEntries.get(cleanedPhone).entryCode
-            }
-        });
-    }
-    
-    // Not in guest list
-    return res.status(404).json({ 
-        success: false, 
-        message: 'לא נמצא ברשימת האורחים' 
+            entryCode: newCode,
+            ticketNumber: ticketNumber,
+            totalTickets: guest.tickets,
+            remaining: guest.tickets - ticketNumber
+        }
     });
 });
 
@@ -161,11 +235,10 @@ app.post('/api/validate', (req, res) => {
 app.get('/api/status', requireAdminCookie, (req, res) => {
     const stats = {
         totalGuests: Object.keys(guestsByPhone).length,
-        validatedCount: validatedEntries.size,
+        validatedCount: Array.from(validatedEntries.values()).filter(e => e.phoneValidationTimestamp).length,
         totalTickets: Object.values(guestsByPhone).reduce((sum, guest) => sum + guest.tickets, 0),
         validatedTickets: Array.from(validatedEntries.values())
-            .filter(entry => entry.entered === true)
-            .reduce((sum, entry) => sum + entry.tickets, 0)
+            .reduce((sum, entry) => sum + enteredCountOf(entry), 0)
     };
     
     res.json(stats);
@@ -188,25 +261,41 @@ app.get('/api/validated', requireAdminCookie, (req, res) => {
 app.get('/api/guests', requireAdminCookie, (req, res) => {
     try {
         const guests = Object.entries(guestsByPhone).map(([phone, guest]) => {
-            const validated = validatedEntries.has(phone);
-            const validationData = validated ? validatedEntries.get(phone) : null;
-            
+            const validationData = validatedEntries.get(phone) || null;
+            // "Validated" = the phone actually completed validation (has a timestamp),
+            // not merely that an entry object exists (e.g. after un-validating).
+            const validated = !!(validationData && validationData.phoneValidationTimestamp);
+            const codes = validationData ? (validationData.codes || []) : [];
+            const enteredCount = validationData ? enteredCountOf(validationData) : 0;
+            const issuedCount = codes.length;
+            // "Fully entered" = every ticket has both a code issued and that person entered
+            const fullyEntered = issuedCount > 0 && enteredCount >= guest.tickets;
+            // Most recent entry time across this guest's codes
+            const lastEntryTimestamp = codes
+                .filter(c => c.entered && c.entryTimestamp)
+                .map(c => c.entryTimestamp)
+                .sort()
+                .pop() || null;
+
             // Find if this guest has sent any messages (with null check)
             const guestMsgs = guestMessages ? guestMessages.filter(msg => msg.guestPhone === phone) : [];
             const hasMessages = guestMsgs.length > 0;
             const messageText = hasMessages ? guestMsgs.map(msg => msg.message).join(' | ') : '';
-            
+
             return {
                 phone: phone.substring(0, 3) + '****' + phone.substring(7), // Masked phone
-                realPhone: phone, 
+                realPhone: phone,
                 name: guest.name,
                 tickets: guest.tickets,
                 validated: validated, // True if phone was validated
                 phoneValidationTimestamp: validationData ? validationData.phoneValidationTimestamp : null,
-                entryCode: validationData ? validationData.entryCode : null,
-                entered: validationData ? validationData.entered : false,
-                entryTimestamp: validationData ? validationData.entryTimestamp : null,
-                enteredBy: validationData ? validationData.enteredBy : null,
+                entryCodes: codes.map(c => c.code),          // All issued codes for this number
+                entryCode: codes.length ? codes.map(c => c.code).join(', ') : null,
+                issuedCount: issuedCount,                    // How many codes handed out (of tickets)
+                entered: fullyEntered,
+                enteredCount: enteredCount,                  // How many people actually entered
+                entryTimestamp: lastEntryTimestamp,
+                enteredBy: validationData ? (codes.find(c => c.enteredBy)?.enteredBy || null) : null,
                 newsletter: validationData ? validationData.newsletter : false,
                 messages: messageText,
                 hasMessages: hasMessages
@@ -236,18 +325,16 @@ app.post('/api/guests', requireAdminCookie, (req, res) => {
     }
     guestsByPhone[cleanedPhone] = { name, tickets };
     
-    // If newsletter is true, add to validated entries with newsletter preference
+    // If newsletter is true, add to validated entries with newsletter preference.
+    // No entry code is issued here — codes are handed out when the guest validates.
     if (newsletter) {
         validatedEntries.set(cleanedPhone, {
             name: name,
             tickets: tickets,
             phoneValidationTimestamp: new Date().toISOString(),
             ip: 'admin-added',
-            entryCode: generateUniqueCode(),
-            entered: false,
-            entryTimestamp: null,
-            enteredBy: null,
-            newsletter: true
+            newsletter: true,
+            codes: []
         });
     }
     
@@ -278,36 +365,40 @@ app.patch('/api/guests/:phone/validation', requireAdminCookie, (req, res) => {
             tickets: guestsByPhone[cleanedPhone].tickets,
             phoneValidationTimestamp: validated ? new Date().toISOString() : null,
             ip: 'admin-update',
-            entryCode: validated ? generateUniqueCode() : null,
-            entered: false,
-            entryTimestamp: null,
-            enteredBy: null,
-            newsletter: false
+            newsletter: false,
+            codes: []
         };
         validatedEntries.set(cleanedPhone, validationEntry);
-    } else {
-        // Update existing entry
-        if (validated && !validationEntry.phoneValidationTimestamp) {
-            validationEntry.phoneValidationTimestamp = new Date().toISOString();
-            validationEntry.entryCode = generateUniqueCode();
-        } else if (!validated) {
-            validationEntry.phoneValidationTimestamp = null;
-            validationEntry.entryCode = null;
-            // Reset entry status if validation is removed
-            validationEntry.entered = false;
-            validationEntry.entryTimestamp = null;
-            validationEntry.enteredBy = null;
-        }
     }
-    
-    res.json({ 
-        success: true, 
+
+    if (validated) {
+        if (!validationEntry.phoneValidationTimestamp) {
+            validationEntry.phoneValidationTimestamp = new Date().toISOString();
+        }
+        // Issue a first code if none exist yet
+        if (!validationEntry.codes || validationEntry.codes.length === 0) {
+            validationEntry.codes = [{
+                code: generateUniqueCode(),
+                issuedAt: new Date().toISOString(),
+                entered: false,
+                entryTimestamp: null,
+                enteredBy: null
+            }];
+        }
+    } else {
+        // Removing validation clears all issued codes and entry state
+        validationEntry.phoneValidationTimestamp = null;
+        validationEntry.codes = [];
+    }
+
+    res.json({
+        success: true,
         message: `Guest ${validated ? 'validated' : 'unvalidated'} successfully`,
         guest: {
             phone: cleanedPhone,
             name: guestsByPhone[cleanedPhone].name,
             validated: validated,
-            entryCode: validationEntry.entryCode
+            entryCode: (validationEntry.codes[0] && validationEntry.codes[0].code) || null
         }
     });
 });
@@ -334,19 +425,38 @@ app.patch('/api/guests/:phone/entry', requireAdminCookie, (req, res) => {
         return res.status(400).json({ success: false, message: 'Guest must be validated before marking as entered' });
     }
     
-    // Update entry status
-    validationEntry.entered = entered;
-    validationEntry.entryTimestamp = entered ? new Date().toISOString() : null;
-    validationEntry.enteredBy = entered ? 'AdminDirectUpdate' : null;
-    
-    res.json({ 
-        success: true, 
+    // This toggle is all-or-nothing: it either admits every issued code or
+    // resets them all back to "not entered".
+    const now = new Date().toISOString();
+    if (!validationEntry.codes) validationEntry.codes = [];
+    if (entered && validationEntry.codes.length === 0) {
+        // No codes issued yet — issue the full set so the guest can be fully admitted
+        const totalTickets = validationEntry.tickets || guestsByPhone[cleanedPhone].tickets || 1;
+        for (let i = 0; i < totalTickets; i++) {
+            validationEntry.codes.push({
+                code: generateUniqueCode(),
+                issuedAt: now,
+                entered: false,
+                entryTimestamp: null,
+                enteredBy: null
+            });
+        }
+    }
+    validationEntry.codes.forEach(c => {
+        c.entered = entered;
+        c.entryTimestamp = entered ? now : null;
+        c.enteredBy = entered ? 'AdminDirectUpdate' : null;
+    });
+
+    res.json({
+        success: true,
         message: `Guest ${entered ? 'marked as entered' : 'entry status removed'} successfully`,
         guest: {
             phone: cleanedPhone,
             name: guestsByPhone[cleanedPhone].name,
             entered: entered,
-            entryTimestamp: validationEntry.entryTimestamp
+            enteredCount: enteredCountOf(validationEntry),
+            entryTimestamp: entered ? now : null
         }
     });
 });
@@ -391,58 +501,47 @@ app.post('/api/validate-code', (req, res) => {
         return res.status(400).json({ success: false, message: 'Code must be exactly 4 digits.' });
     }
 
-    let foundEntry = null;
-    let guestPhoneKey = null;
-
-    // Normalize code comparison - ensure both are strings
     console.log('🔍 Searching for code:', normalizedCode);
     console.log('📋 Total validated entries:', validatedEntries.size);
-    
-    for (const [phone, entryData] of validatedEntries.entries()) {
-        const storedCode = String(entryData.entryCode || '').trim();
-        if (storedCode === normalizedCode) {
-            foundEntry = entryData;
-            guestPhoneKey = phone;
-            console.log('✅ Code found! Guest:', foundEntry.name, 'Phone:', phone);
-            break;
-        }
-    }
-    
-    if (!foundEntry) {
-        // Log available codes for debugging (first 5 only)
-        const availableCodes = Array.from(validatedEntries.values())
-            .slice(0, 5)
-            .map(e => e.entryCode);
-        console.log('❌ Code not found. Sample available codes:', availableCodes);
-    }
 
-    if (foundEntry) {
-        if (foundEntry.entered) {
-            return res.status(400).json({
-                success: false,
-                message: `הקוד כבר שומש. האורח ${foundEntry.name} נכנס בשעה ${new Date(foundEntry.entryTimestamp).toLocaleString('he-IL')}.`
-            });
-        } else {
-            foundEntry.entered = true;
-            foundEntry.entryTimestamp = new Date().toISOString();
-            foundEntry.enteredBy = 'AdminCodeValidation';
-            
-            validatedEntries.set(guestPhoneKey, foundEntry); // Update the map entry
+    const found = findByCode(normalizedCode);
 
-            const isBirthdayGuest = guestsByPhone[guestPhoneKey]?.isBirthday || false;
-
-            return res.json({
-                success: true,
-                guestName: foundEntry.name,
-                phone: guestPhoneKey,
-                ticketsValidated: foundEntry.tickets,
-                isBirthdayGuest: isBirthdayGuest,
-                message: `Guest ${foundEntry.name} successfully validated for entry.`
-            });
-        }
-    } else {
+    if (!found) {
         return res.status(404).json({ success: false, message: 'קוד שגוי או לא קיים.' });
     }
+
+    const { phone: guestPhoneKey, entry: foundEntry, codeObj } = found;
+    console.log('✅ Code found! Guest:', foundEntry.name, 'Phone:', guestPhoneKey);
+
+    // This specific code was already used
+    if (codeObj.entered) {
+        return res.status(400).json({
+            success: false,
+            message: `הקוד כבר שומש. האורח ${foundEntry.name} נכנס בשעה ${new Date(codeObj.entryTimestamp).toLocaleString('he-IL')}.`
+        });
+    }
+
+    // Admit this one person
+    codeObj.entered = true;
+    codeObj.entryTimestamp = new Date().toISOString();
+    codeObj.enteredBy = 'AdminCodeValidation';
+
+    const totalTickets = foundEntry.tickets || 1;
+    const enteredCount = enteredCountOf(foundEntry);
+    const remaining = totalTickets - enteredCount;
+    const isBirthdayGuest = guestsByPhone[guestPhoneKey]?.isBirthday || false;
+
+    return res.json({
+        success: true,
+        guestName: foundEntry.name,
+        phone: guestPhoneKey,
+        ticketsValidated: totalTickets,
+        enteredCount: enteredCount,
+        remainingTickets: remaining,
+        fullyEntered: enteredCount >= totalTickets,
+        isBirthdayGuest: isBirthdayGuest,
+        message: `Guest ${foundEntry.name} successfully validated for entry.`
+    });
 });
 
 // 4-digit code validation endpoint - redirects to admin with guest popup
@@ -455,18 +554,10 @@ app.get('/admin/validate/:code', requireAdminCookie, (req, res) => {
         return res.status(400).send('Invalid code format - must be 4 digits');
     }
 
-    let foundEntry = null;
-    let guestPhoneKey = null;
-
-    // Find the guest by code - normalize comparison
-    for (const [phone, entryData] of validatedEntries.entries()) {
-        const storedCode = String(entryData.entryCode || '').trim();
-        if (storedCode === normalizedCode) {
-            foundEntry = entryData;
-            guestPhoneKey = phone;
-            break;
-        }
-    }
+    const found = findByCode(normalizedCode);
+    const foundEntry = found ? found.entry : null;
+    const guestPhoneKey = found ? found.phone : null;
+    const foundCodeObj = found ? found.codeObj : null;
 
     if (!foundEntry) {
         return res.status(404).send(`
@@ -491,7 +582,9 @@ app.get('/admin/validate/:code', requireAdminCookie, (req, res) => {
         `);
     }
 
-    // Redirect to admin page with guest info in URL fragment
+    // Redirect to admin page with guest info in URL fragment. Focus on the
+    // specific code that was scanned.
+    const enteredCount = enteredCountOf(foundEntry);
     const guestData = {
         name: foundEntry.name,
         phone: guestPhoneKey,
@@ -499,10 +592,13 @@ app.get('/admin/validate/:code', requireAdminCookie, (req, res) => {
         tickets: foundEntry.tickets,
         validated: true,
         phoneValidationTimestamp: foundEntry.phoneValidationTimestamp,
-        entryCode: foundEntry.entryCode,
-        entered: foundEntry.entered,
-        entryTimestamp: foundEntry.entryTimestamp,
-        enteredBy: foundEntry.enteredBy
+        entryCode: foundCodeObj.code,
+        entryCodes: (foundEntry.codes || []).map(c => c.code),
+        entered: enteredCount >= foundEntry.tickets,
+        enteredCount: enteredCount,
+        issuedCount: (foundEntry.codes || []).length,
+        entryTimestamp: foundCodeObj.entryTimestamp,
+        enteredBy: foundCodeObj.enteredBy
     };
 
     const encodedGuestData = encodeURIComponent(JSON.stringify(guestData));

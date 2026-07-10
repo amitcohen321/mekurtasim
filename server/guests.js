@@ -4,7 +4,7 @@
       "name": "Moran Yana",
       "tickets": 1,
       "isBirthday": false
-    },
+    }
   },
   {
     "0547571281": {
