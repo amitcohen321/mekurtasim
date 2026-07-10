@@ -132,12 +132,11 @@ function showSuccess(guest) {
                 כל הקודים שהופקו למספר זה:<br>
                 <span style="font-family: 'Courier New', monospace; font-size: 1.2rem; letter-spacing: 3px; font-weight: bold;">${allCodes.join(' · ')}</span>
             </div>` : ''}
+            ${remaining > 0 ? `
+            <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.25); font-size: 0.9rem; opacity: 0.9;">
+                נותרו עוד ${remaining} כרטיס/ים — חזרו לחיפוש והזינו שוב את המספר כדי לקבל קוד לאורח נוסף.
+            </div>` : ''}
         </div>
-        ${remaining > 0 ? `
-        <button id="get-another-code-btn" style="background: linear-gradient(135deg, #FF9C42, #FFD700); color: #000; border: none; padding: 14px 20px; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 700; width: 100%; margin-bottom: 12px;">
-            ➕ קבלת קוד לאורח נוסף (נותרו ${remaining})
-        </button>
-        ` : ''}
         ` : ''}
 
         <div class="welcome-text">
@@ -152,12 +151,6 @@ function showSuccess(guest) {
     // Add event listener for share message button
     document.getElementById('share-message-btn').addEventListener('click', shareMessage);
 
-    // "Get another code" button — issues the next code for this same number
-    const anotherBtn = document.getElementById('get-another-code-btn');
-    if (anotherBtn) {
-        anotherBtn.addEventListener('click', getAnotherCode);
-    }
-
     if (navigator.vibrate) {
         navigator.vibrate([100, 50, 100]);
     }
@@ -166,34 +159,6 @@ function showSuccess(guest) {
     saveCache(guest, allCodes);
 
     logSuccessfulEntry(guest);
-}
-
-// Issue the next entry code for the same phone number (another guest)
-async function getAnotherCode() {
-    if (!currentGuest || !currentGuest.phone) return;
-
-    showLoader();
-
-    try {
-        const response = await fetch(`${API_URL}/validate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone: currentGuest.phone })
-        });
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-            showSuccess(data.guest);
-        } else if (response.status === 403 && data.allIssued) {
-            // No codes left — re-render current state (button will be gone)
-            showSuccess(currentGuest);
-        } else {
-            showError(data.message || 'שגיאה בקבלת קוד נוסף');
-        }
-    } catch (error) {
-        console.error('Error getting another code:', error);
-        showError('שגיאה בחיבור לשרת');
-    }
 }
 
 // הצג תוצאת כישלון
