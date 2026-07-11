@@ -847,8 +847,8 @@
     }
   },
   {
-    "0506484982": {
-      "name": "Bar Varsano",
+    "0547908525": {
+      "name": "לירן יאנקוביץ",
       "tickets": 1,
       "isBirthday": false
     }
@@ -896,8 +896,8 @@
     }
   },
   {
-    "0545727353": {
-      "name": "דור נגאר",
+    "0549960596": {
+      "name": "בר ראובן",
       "tickets": 1,
       "isBirthday": false
     }
@@ -1262,6 +1262,20 @@
   {
     "0503734455": {
       "name": "תומר בן ציון",
+      "tickets": 1,
+      "isBirthday": false
+    }
+  },
+  {
+    "0524696252": {
+      "name": "דניאל ראש",
+      "tickets": 1,
+      "isBirthday": false
+    }
+  },
+  {
+    "0544457923": {
+      "name": "אור מלכה",
       "tickets": 1,
       "isBirthday": false
     }
