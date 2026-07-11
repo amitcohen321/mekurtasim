@@ -112,13 +112,6 @@
     }
   },
   {
-    "0546685204": {
-      "name": "יעל שייה",
-      "tickets": 1,
-      "isBirthday": false
-    }
-  },
-  {
     "0544467888": {
       "name": "Omer Biran",
       "tickets": 1,
@@ -1022,8 +1015,8 @@
     }
   },
   {
-    "0524380209": {
-      "name": "רוני שוכר",
+    "0542791222": {
+      "name": "שי אייזן",
       "tickets": 1,
       "isBirthday": false
     }
@@ -1276,6 +1269,13 @@
   {
     "0544457923": {
       "name": "אור מלכה",
+      "tickets": 1,
+      "isBirthday": false
+    }
+  },
+  {
+    "0525959302": {
+      "name": "מאיה לב",
       "tickets": 1,
       "isBirthday": false
     }
